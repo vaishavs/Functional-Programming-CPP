@@ -1,7 +1,16 @@
-# Functional-Programming-C-
+# Functional Programming in C++
 This repo contains explanation and examples about functional programming in C++.
 
-Prerequisites:
-1. Basics in C++ (https://www.udemy.com/course/cpp23-fundamentals-projects-algorithms/)
+## Prerequisites:
+1. Basics in C++ (See https://www.udemy.com/course/cpp23-fundamentals-projects-algorithms/)
 2. C++ template programming (See https://www.udemy.com/course/modcpptemplates/)
 3. C++ STL (See https://www.udemy.com/course/c-standard-template-library-in-practice/)
+4. Lambda expressions (See https://www.udemy.com/course/modcpp-lambda)
+
+## Table of contents:
+1. Introduction to functional programming
+2. Designing higher-order functions in C++
+3. Standard Higher-Order Functions in C++
+4. Introduction to Boost.Range Library
+5. Functional Programming Techniques in C++
+6. Advanced Functional Programming Techniques
