@@ -141,11 +141,11 @@ namespace stdx = std::execution;
  stdx::sender auto read_and_write(stdx::scheduler auto scheduler auto sched)
 {
    return stdx::schedule(sched) // Schedules threads
-       | stdx::let_value(async_read_int) // Reading the integer
-       | stdx::then([](int i) {
-        return fib(i); // Computes fibonacci
-       })
-       | stdx::let_value(async_write_int); // Writing the result
+          | stdx::let_value(async_read_int) // Reading the integer
+          | stdx::then([](int i) {
+           return fib(i); // Computes fibonacci
+          })
+          | stdx::let_value(async_write_int); // Writing the result
 }
 ```
 The above example uses multithreading for asynchronosity. The std::execution::schedule starts asynchronous work, std::execution::then maps values, and std::execution::let_value chains new senders. Together, they form a pipeline for asynchronous programming in C++26, resulting in composability similar to Haskell’s do notation or Scala’s flatMap.
