@@ -9,13 +9,13 @@ int fac(unsigned int n)
   return (n == 0) ? 1 : (n * fac(n-1));
  }
 ```
- And assuming we want to filter odd factorials and sort them in descending, in imperative programming, this takes up a lot of steps and intermediate states, making the code error-prone and hard to read and debug. Functional programming simplifies this by eliminating intermediate states. This also means there is a signiicant overhead on the hardware. Using functional programming is a trade off between performance and correctness. Fortunately, C++ is not a pure functional language, so it has the best of both worlds. We can only use it where it makes sense.
+ And assuming we want to filter odd factorials and sort them in descending, in imperative programming, this takes up a lot of steps and intermediate states, making the code error-prone and hard to read and debug. Functional programming simplifies this by eliminating intermediate states. This also means there is a signiicant overhead on the hardware. Using functional programming is a trade-off between performance and correctness. Fortunately, C++ is not a pure functional language, so it has the best of both worlds. We can only use it where it makes sense.
  
 ## The building blocks 
 The way functional programming is used in C++ is to write building blocks using regular imperative-style code, and compose those blocks using functional paradigms.  These building blocks are efficient, and the composed structure is easy. In C++, 3 things are composed in particular:
 1. Algorithms
-2.  2. Functions
-3.  3. I/O
+2.  Functions
+3.  I/O
  
 ### Composing algorithms
 Consider a problem statement, where we have to find the biggest magnitude of an odd integer in the list [3, 0, 2, -1, 5, -7, 8].  In the regular imperative programming, it would look something like this:
@@ -50,9 +50,8 @@ namespace stdv = std::views;
            | stdv::filter([](int x) {return x % 2 == 1; }) // 2. Keep the odd values   );
  }
 ```
- 
 A range refers to a pair of two iterators, the head and the tail of a sequence (or a sentinel in some cases).
- Some common building blocks in C++ are:
+Some common building blocks in C++ are:
  1. Creating ranges: iota, generator
  2.  Transforming ranges: transform, filter
  3. Combining ranges: cartesian_product, zip, concat
@@ -93,7 +92,8 @@ And functions that might fail: 
 ExpectedInt multiplyByTwo(int value) {
      if (value > 1000) {
         return std::unexpected<Error>("Value is too large to multiply by two: " + std::to_string(value)); // Error
-     }     return value * 2; // Success
+     }
+     return value * 2; // Success
  }
  
 // 3. A function to handle the final result or an error
@@ -148,8 +148,8 @@ namespace stdx = std::execution;
        | stdx::let_value(async_write_int); // Writing the result
 }
 ```
-The above example uses multithreading for asynchronosity. The std::execution::schedule starts asynchronous work, std::execution::then maps values, and std::execution::let_value chains new senders. Together they form a pipeline for asynchronous programming in C++26, resulting in composability similar to Haskell’s do notation or Scala’s flatMap.
+The above example uses multithreading for asynchronosity. The std::execution::schedule starts asynchronous work, std::execution::then maps values, and std::execution::let_value chains new senders. Together, they form a pipeline for asynchronous programming in C++26, resulting in composability similar to Haskell’s do notation or Scala’s flatMap.
 
 Source: https://www.youtube.com/watch?v=lvlXgSK03D4 
 
-Note: The examples should be using the latest GCC compiler with latest std specified.
+Note: The examples should be compiled using the latest GCC compiler with latest std specified.
