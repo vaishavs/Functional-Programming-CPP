@@ -14,7 +14,7 @@ int main() {
     std::vector<int> nums = {1, 2, 3, 4, 5};
     // Use the functor to add 10 to every element
     std::transform(nums.begin(), nums.end(), nums.begin(), Incrementer<int>(10));
-    for(auto n : nums) std::cout << n << " "; // Output: 11 12 13
+    for(auto n : nums) std::cout << n << " "; // Output: 11 12 13 14 15
     
     std::cout << std::endl;
     
