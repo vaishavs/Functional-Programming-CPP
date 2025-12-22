@@ -1,0 +1,120 @@
+# Callable entities in C++
+There are different types of callable entities in C++:
+1. Function-like macros
+2. Global/Namespace/Member functions
+3. function pointers
+4. References to functions
+5. Functors
+
+Out of these, function pointers, function references, and functors are object types, i.e., they can be used like regular variables, pointers, and references. This allows the user to call functions dynamically at runtime, pass them as arguments to other functions (callbacks), or store them in arrays for complex logic.
+
+## Function pointers
+A function pointer is a variable that stores the memory address of a function. The signature of a function pointer must match the return type, calling convention, and parameter list of the function it points to.
+
+### Global/Namespace function pointer
+A global or namespace function pointer is declared as:
+```
+return_type (*funcPtr)(parameter_types);
+```
+The the address of a function is then assigned to it.
+```
+funcPtr = &myFuncName; // '&' is optional; 'funcPtr = myFuncName;' also works
+```
+Finally, the function is invoked via its pointer:
+```
+auto result = funcPtr(/* ... */);
+```
+
+For example, consider a function
+```
+int add (int a, int b)
+{
+    return a+b;
+}
+```
+Its function pointer would be:
+```
+// 1. Declaration: return_type (*pointer_name)(parameter_types);
+int (*funcPtr)(int, int);
+
+// 2. Initialization: Assign the address of a function
+funcPtr = &add; // '&' is optional; 'funcPtr = add;' also works
+
+// 3. Invocation: Call the function via the pointer
+int result = funcPtr(10, 5); // Equivalent to add(10, 5)
+```
+
+Function pointers can also be used with ```typedef```.
+```
+typedef int (*funcPtr)(int, int);
+// ...
+funcPtr f = add; // OR, funcPtr f = &add;
+int res = f(10, 5);
+```
+
+### Member function pointers
+Function pointers to member functions are used in the following manner:
+```
+ReturnType (ClassName::*ptrName)(Params) = &ClassName::Member;
+```
+And the invocation is done using ```.*``` or ```->*``` operator.
+For example:
+```
+class Calculator {
+public:
+    int add(int a, int b) { return a + b; }
+    // ...
+};
+
+// Function pointer
+int (Calculator::*ptr)(int, int);
+
+int main() {
+    Calculator calc;
+    // Pointer to a member function of class Calculator
+    //Equivalent to int (Calculator::*ptr)(int, int) = &Calculator::add;
+    ptr = &Calculator::add;
+    
+    // Call using an object instance
+    int res = (calc.*ptr)(5, 5); 
+    return 0;
+}
+```
+
+### Operations allowed
+1. Assign an address of a function
+2. Compare 2 function pointers
+3. Call a function using the pointer
+4. Pass the function pointer as an argument to another function
+5. Return a function pointer
+6. Store them in arrays
+
+## Function references
+Just as there is a pointer to a function, an alias (reference) can be created for a function name.
+**Syntax**
+```
+return_type (&referenceName)(param_list)
+```
+For example:
+```
+void greet()
+{
+    std::cout << "Hello!";
+}
+
+int main()
+{
+    void (&ref)() = greet; // ref is now an alias for greet
+    ref();                 // Calls greet()
+}
+```
+Once a reference is bound to an object (or function), it cannot be changed to refer to another one.
+
+## Functors
+Functors are smart function pointers in the sense that they have:
+* Value semantics
+* Added type safety
+* Encapsulation for function parameters using templates and polymorphism
+* Distiction between function pointers with identical signature
+* State information
+
