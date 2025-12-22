@@ -146,7 +146,7 @@ int main()
 
 ## Modern C++ Alternatives (2025 Context)
 While raw function pointers are efficient, modern C++ (C++11 and later) provides more flexible alternatives: 
-* std::function: A type-safe wrapper that can store function pointers, lambdas, or functors.
+* ```std::function```: A type-safe wrapper that can store function pointers, lambdas, or functors.
 * Lambdas: Anonymous functions that can be passed directly to other functions without declaring a named function (internally converted to a functor by the compiler).
-* std::invoke: A universal way to call any callable (added in C++17) that simplifies the syntax for member function pointers.
-* std::function_fref: A type-safe function reference
+* ```std::invoke```: A universal way to call any callable (added in C++17) that simplifies the syntax for member function pointers.
+* ```std::function_fref```: A type-safe function reference
