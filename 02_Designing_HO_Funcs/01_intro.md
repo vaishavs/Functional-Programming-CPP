@@ -2,10 +2,10 @@
 There are different types of callable entities in C++:
 1. Function-like macros
 2. Global/Namespace/Member functions
-3. Lambdas
-4. Function pointers
-5. References to functions
-6. Functors
+3. Function pointers
+4. References to functions
+5. Functors
+6. Lambdas (Since C++11)
 
 Out of these, function pointers, function references, and functors are object types, i.e., they can be used like regular variables, pointers, and references. This allows the user to call functions dynamically at runtime, pass them as arguments to other functions (callbacks), or store them in arrays for complex logic.
 
@@ -146,8 +146,7 @@ int main()
 
 ## Modern C++ Alternatives (2025 Context)
 While raw function pointers are efficient, modern C++ (C++11 and later) provides more flexible alternatives: 
-std::function: A type-safe wrapper that can store function pointers, lambdas, or functors.
-Lambdas: Anonymous functions that can be passed directly to other functions without declaring a named function.
-std::invoke: A universal way to call any callable (added in C++17) that simplifies the syntax for member function pointers.
-std::function_fref: A type-safe function reference
-lambdas: Anonymous inline function converted to a functor internally by the compiler
+* std::function: A type-safe wrapper that can store function pointers, lambdas, or functors.
+* Lambdas: Anonymous functions that can be passed directly to other functions without declaring a named function (internally converted to a functor by the compiler).
+* std::invoke: A universal way to call any callable (added in C++17) that simplifies the syntax for member function pointers.
+* std::function_fref: A type-safe function reference
