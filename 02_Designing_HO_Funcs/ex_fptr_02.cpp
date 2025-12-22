@@ -6,7 +6,7 @@ public:
     // ...
 };
 
-// Function pointer
+// Member function pointer
 int (Calculator::*ptr)(int, int);
 
 int main()
