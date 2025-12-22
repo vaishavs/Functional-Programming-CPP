@@ -113,7 +113,7 @@ int main()
 Once a reference is bound to an object (or function), it cannot be changed to refer to another one.
 
 ## Functors
-Functors are smart function pointers in the sense that they have:
+Functors are smart function objects in the sense that they have:
 * Value semantics
 * Added type safety
 * Encapsulation for function parameters using templates and polymorphism
