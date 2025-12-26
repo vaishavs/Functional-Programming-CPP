@@ -34,6 +34,7 @@ void compute(int a, int b, std::function<int(int, int)> operation) {
 }
 
 // Since C++26
+// Pass in std::function_ref
 // Best for immediate callbacks that don't need to be stored long-term
 // void process(std::function_ref<int(int)> action) {
 //     std::cout << action(x) << std::endl;;
