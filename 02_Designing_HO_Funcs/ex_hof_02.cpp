@@ -13,8 +13,9 @@ std::function<int(int)> adder(int factor) {
     return [factor](int x) { return x + factor; }; // Returns a lambda
 }
 
+// Returns a functor
 auto multiply(int x) {
-    return Multiplier{std::move(x)};  // Returns a functor
+    return Multiplier{std::move(x)}; 
 }
 
 
