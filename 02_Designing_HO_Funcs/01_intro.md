@@ -125,9 +125,6 @@ For example:
 ```
 #include <iostream>
 
-// A sample function
-int add(int a, int b) { return a+b; }
-
 // A functor
 class AdderFunctor {
 public:
@@ -138,9 +135,6 @@ int main()
 {
     int x = 5, y = 7;
     
-    int z = add(x, y);
-    std::cout << "z = " << z << std::endl;
-
     int zf = aF(x, y); // aF.operator()(x,y)
     std::cout << "zf = " << zf << std::endl;
 }
