@@ -1,33 +1,49 @@
-/* Since C++26 */
 #include <iostream>
-#include <functional> // std::function_ref (C++26)
-#include <vector>
+#include <functional> // Note: std::function_ref is part of a proposed/upcoming standard
 
-// Accepts any callable that takes an int and returns void
-// It does NOT take ownership; it only refers to the callable during execution.
-void process(const std::vector<int>& data, std::function_ref<void(int)> action) {
-    for (int x : data) {
-        action(x);
-    }
+// 1. Free Function
+void print_message(const std::string& msg) {
+    std::cout << "Free function msg: " << msg << std::endl;
 }
 
-// DANGEROUS: The lambda is destroyed by the time this function returns.
-// Bad because std::function_ref does not make an internal copy of the function assigned to it like std::function does
-// std::function_ref<int(int)> get_bad_ref() {
-//     return [](int x) { return x * 2; }; // BUG: returns reference to temporary
-// }
+// 2. Functor (Function Object)
+class MessageFunctor {
+public:
+    void operator()(const std::string& msg) const { // Overload the function call operator
+        std::cout << "Functor msg: " << msg << std::endl;
+    }
+};
 
+// Function that accepts a std::function_ref to a callable with a specific signature
+void call_wrapper(std::function_ref<void(const std::string&)> func_ref) {
+    func_ref("Hello, world!");
+}
 
 int main() {
-    std::vector<int> nums = {1, 2, 3};
-    int total = 0;
+    // --- Using a function pointer ---
+    // The function pointer is implicitly convertible to std::function_ref
+    void (*func_ptr)(const std::string&) = &print_message;
+    call_wrapper(func_ptr); // The function reference is non-owning
 
-    // A stateful lambda capturing 'total' by reference
-    auto addToTotal = [&](int n) { total += n; };
+    // --- Using a function ---
+    // The free function is implicitly convertible to std::function_ref
+    call_wrapper(print_message);
 
-    // Pass the lambda directly; function_ref refers to 'addToTotal'
-    process(nums, addToTotal);
+    // --- Using a raw function reference ---
+    // The function reference is implicitly convertible to std::function_ref
+    void (&func_ref)(const std::string&) = print_message;
+    call_wrapper(func_ref);
 
-    std::cout << "Total: " << total << std::endl; // Output: Total: 6
+    // --- Using a functor (function object) ---
+    // The functor object (an lvalue) is implicitly convertible to std::function_ref
+    MessageFunctor my_functor;
+    call_wrapper(my_functor);
+    
+    // --- Using a lambda (which is a form of a functor) that outlives std::function_ref ---
+    auto lambda_func = [](const std::string& msg) {
+        std::cout << "Lambda msg: " << msg << std::endl;
+    };
+    call_wrapper(lambda_func);
+    
     return 0;
 }
