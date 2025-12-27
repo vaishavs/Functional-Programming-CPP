@@ -16,7 +16,7 @@ This repo contains explanation and examples about functional programming in C++.
 
 2. Designing higher-order functions in C++
    
-   i) Introduction
+   i) Callable entities in C++
    
    ii) ```std::function``` and ```std::function_ref```
    
