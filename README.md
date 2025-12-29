@@ -23,9 +23,11 @@ This repo contains explanation and examples about functional programming in C++.
    iii) Higher-order functions
    
    iv) Examples
-3. Standard Higher-Order Functions in C++
-4. Introduction to Boost.Range Library
-5. Functional Programming Techniques in C++
-6. Advanced Functional Programming Techniques
+
+   v) Exercises
+4. Standard Higher-Order Functions in C++
+5. Introduction to Boost.Range Library
+6. Functional Programming Techniques in C++
+7. Advanced Functional Programming Techniques
 
 Happy learning!
