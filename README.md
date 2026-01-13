@@ -21,10 +21,12 @@ This repo contains explanation and examples about functional programming in C++.
    ii) ```std::function``` and ```std::function_ref```
    
    iii) Higher-order functions
-   
-   iv) Examples
 
-   v) Exercises
+   iv) Binding function parameters
+   
+   v) Examples
+
+   vi) Exercises
 4. Standard Higher-Order Functions in C++
 5. Introduction to Boost.Range Library
 6. Functional Programming Techniques in C++
