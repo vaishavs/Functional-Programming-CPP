@@ -1,5 +1,5 @@
 # Binding function arguments
-std::bind is part of the ```<functional>``` library in C++. It allows us to bind one or more arguments to a function, creating new callable objects by pre-setting (binding) some or all arguments of an existing function. The function is invoked only when someone calls the function object returned by ```std::bind```.
+The ```std::bind``` is part of the ```<functional>``` library in C++. It allows us to bind one or more arguments to a function, creating new callable objects by pre-setting (binding) some or all arguments of an existing function. The function is invoked only when someone calls the function object returned by ```std::bind```.
 
 ### Syntax
 ```
