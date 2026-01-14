@@ -144,7 +144,7 @@ int main() {
 ```
 Hence, one way to overcome them is to bind by reference.
 # Binding by reference
-Binding by reference can be useful when the bound parameter needs to reflect any changes made to the original variable. This means that the bound function will use the current value of the variable when invoked, not the value it had when the function was created. To bind by reference, ```std::ref``` is used for non-const references and ```std::cref``` is used for const references. The ```std::ref``` and ```std::cref``` are helper functions used to generate a ```std::reference_wrapper```. They automatically convert to a raw reference (```T&```) when passed to a function that expects the underlying type.
+Binding by reference can be useful when the bound parameter needs to reflect any changes made to the original variable. This means that the bound function will use the current value of the variable when invoked, not the value it had when the function was created. To bind by reference, ```std::ref``` is used for non-const references and ```std::cref``` is used for const references. The ```std::ref``` and ```std::cref``` are helper functions defined in ```<functional>``` header that are used to generate a ```std::reference_wrapper```. They automatically convert to a raw reference (```T&```) when passed to a function that expects the underlying type.
 ```
 #include <iostream>
 #include <functional>
