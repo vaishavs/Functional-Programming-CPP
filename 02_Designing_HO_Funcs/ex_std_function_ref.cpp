@@ -1,6 +1,6 @@
 /* Since C++26 */
 #include <iostream>
-#include <functional> // Note: std::function_ref is part of a proposed/upcoming standard
+#include <functional>
 
 // 1. Free Function
 void print_message(const std::string& msg) {
