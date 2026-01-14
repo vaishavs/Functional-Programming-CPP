@@ -1,3 +1,4 @@
+/* Since C++26 */
 #include <iostream>
 #include <functional> // Note: std::function_ref is part of a proposed/upcoming standard
 
