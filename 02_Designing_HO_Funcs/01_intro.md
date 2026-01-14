@@ -110,7 +110,7 @@ int main()
     ref();                 // Calls greet()
 }
 ```
-Once a reference is bound to an object (or function), it cannot be changed to refer to another one.
+Once a reference is bound to an object (or function), it cannot be changed to refer to another one. Also, it cannot be null or assigned with ```nullptr``` or left uninitialized.
 
 ## Functors
 Functors are smart function objects in the sense that they have:
