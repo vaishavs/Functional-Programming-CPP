@@ -6,9 +6,9 @@ The ```std::bind``` is part of the ```<functional>``` library in C++. It allows 
 auto new_callable = std::bind(function, arguments...);
 ```
 
-There are several key ways in which ```std::bind``` is used.
+There are several ways in which ```std::bind``` is used.
 ### Placeholders
-The ```std::bind``` takes a callable (function pointer, functor, or lambda) as its first argument, followed by the specific values to be "fixed". To leave some arguments "open" to be provided at the actual call time, ```std::placeholders::_1```, ```_2```, etc., are used.
+The ```std::bind``` takes a callable (function pointer, functor, or lambda) as its first argument, followed by the specific values to be "fixed". To leave some arguments "open" to be provided at the actual call time, ```std::placeholders::_1```, ```_2```, etc., are used. Placeholders are special objects used in ```std::bind``` to represent arguments provided later. By using a placeholder, we say: "Hey, there will be an argument, but it is not present right now!" The ```std::placeholders::_1``` represents the first parameter, ```std::placeholders::_2``` represents the second parameter, and so on.
 
 ```
 #include <iostream>
@@ -27,11 +27,9 @@ int main() {
 }
 ```
 In this example:
-
-    * add is a function that takes two ints and returns their sum.
-    * ```std::bind``` creates ```add_five``` by binding the second argument of add to 5.
-    * Calling add_five(3) results in add(3, 5), producing 8.
-Placeholders are special objects used in ```std::bind``` to represent arguments provided later. By using a placeholder, we say: "Hey, there will be an argument, but it is not present right now!" The ```std::placeholders::_1``` represents the first parameter, ```std::placeholders::_2``` represents the second parameter, and so on.
+* ```add``` is a function that takes two ints and returns their sum.
+* ```std::bind``` creates ```add_five``` by binding the second argument of ```add``` to ```5```.
+* Calling ```add_five(3)``` results in ```add(3, 5)```, producing ```8```.
 
 ### Argument reordering and duplication
 Placeholders can be used to change the order of its function parameters or repeat them.
