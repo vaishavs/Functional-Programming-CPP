@@ -26,11 +26,11 @@ To illustrate diagrammatically:
 [![Copilot-20260214-125707.png](https://i.postimg.cc/RVWj6PPY/Copilot-20260214-125707.png)](https://postimg.cc/D8KCRc3Q)
 # Workflow
 Implementing a standard higher function involves the following steps:
-### Define a callable
+### Step 1: Define a callable
 The first step is to define a callable that contains what the desired logic. It should define what operation should be performed. This essentially involves creating a lambda, functor, or a function pointer.
-### Choose an algorithm
+### Step 2: Choose an algorithm
 The next step is to select an algorithm from the standard library that suits our purpose. This step defines how the callable will be applied.
-### Provide a data/range
+### Step 3: Provide a data/range
 The execution context, i.e., the data needs to be supplied, on which the algorithm would operate. This step involves supplying a container or iterator range.
 
 [![Copilot-20260214-144124.png](https://i.postimg.cc/xTP95pGX/Copilot-20260214-144124.png)](https://postimg.cc/VddyLRVw)
