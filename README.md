@@ -28,6 +28,7 @@ This repo contains explanation and examples about functional programming in C++.
 
    vi) Exercises
 4. Standard Higher-Order Functions in C++
+
    i) Introduction
 
    ii) Things to remember
