@@ -34,3 +34,9 @@ The next step is to select an algorithm from the standard library that suits our
 The execution context, i.e., the data needs to be supplied, on which the algorithm would operate. This step involves supplying a container or iterator range.
 
 [![Copilot-20260214-144124.png](https://i.postimg.cc/xTP95pGX/Copilot-20260214-144124.png)](https://postimg.cc/VddyLRVw)
+
+With the introduction of Ranges, the workflow has evolved into a "Pipeable" style: 
+* Workflow: Data | View_Adapter | Action
+* Example: ```users | std::views::filter(is_active) | std::views::transform(get_name)```
+
+This allows for lazy evaluation, where the workflow is defined immediately but logic is only executed when you actually iterate over the final result. 
