@@ -61,7 +61,7 @@ The execution context, i.e., the data needs to be supplied, on which the algorit
 [![Copilot-20260214-144124.png](https://i.postimg.cc/xTP95pGX/Copilot-20260214-144124.png)](https://postimg.cc/VddyLRVw)
 
 # Modern Improvements
-With the introduction of Ranges in C++20, working with algorithms became more expressive and easier to read. Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
+With the introduction of Ranges and Views in C++20, working with algorithms became more expressive and easier to read. Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
 
 The general pattern looks like this:
 ```
