@@ -159,6 +159,37 @@ When working with **higher-order functions** in **C++**—such as STL algorithms
 
 ---
 
+### 14. **Control parameters**
+The execution policy and the seed values act as control parameters that defines how and from what starting point the operation is executed.
+Execution policy controls:
+* Threading (Whether the algorithm runs on one core or many cores)
+* Ordering (Whether the elements are processed in a predictable order)
+* Vectorization (Whether the CPU combines multiple operations into one hardware SIMD instruction)
+* Determinism (Whether results are strictly predictable or allowed to vary slightly for speed)
+
+It decides:
+“How aggressively and in what manner should this computation run?”
+
+Seed controls:
+* Initial state (The very first value used in the computation)
+* Algebraic identity (The mathematical identity element of the operation, e.g., 0 for addition, 1 for multiplication)
+* Result type (The data type of the final result, e.g., char, int, double, etc.)
+* Precision (How accurate the final answer can be)
+* State structure (What kind of object holds the intermediate state)
+
+It decides:
+“What is the starting point and what kind of result are we building?”
+
+**Key Point**: By changing these 2 parameters, we can completely change:
+* performance
+* threading behavior
+* ordering guarantees
+* result type
+* precision
+* shape of the final result
+
+
+
 ### TL;DR: Key Things to Remember
 
 * Use `std::back_inserter` for destination ranges in algorithms.
