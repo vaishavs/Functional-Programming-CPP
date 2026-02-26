@@ -196,8 +196,8 @@ It decides:
 * Always ensure lambdas **return values** when used in transformation algorithms.
 * Be mindful of iterator validity when modifying containers.
 * Prefer **side-effect free** predicates.
-* **Execution policies** allow parallel execution (C++17+).
-* Use **ranges** for elegant and efficient transformations in C++20.
+* **Execution policies** allow parallel execution (Since C++17).
+* Use **ranges** for elegant and efficient transformations (Since C++20).
 * Use **Erase-Remove Idiom** for removing elements from containers.
 
 By keeping these principles in mind, you can write more **efficient**, **robust**, and **maintainable code** using C++ standard higher-order functions.
