@@ -97,7 +97,7 @@ users
 This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
 
-The view adapters defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic.
+The view adapters defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 
 Sources:
