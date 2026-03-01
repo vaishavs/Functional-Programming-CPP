@@ -1,5 +1,15 @@
 /**
  * Logistic fleet management
+ * 
+ * Standard higher order functions used ->
+ * std::views::filter
+ * std::views::transform
+ * std::reduce
+ * std::max_element
+ * std::all_of
+ * std::any_of
+ * std::inclusive_scan
+ * std::sort
  */
 
 #include <iostream>
