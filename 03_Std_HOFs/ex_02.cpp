@@ -1,5 +1,12 @@
 /**
  * Logistic fleet management
+ *
+ * This example:
+ * 1. Filters out "bad" trucks.
+ * 2. Calculates MPG for the "good" ones.
+ * 3. Computes fleet-wide stats (average MPG, total miles, max trip).
+ * 4. Runs safety checks across the whole dataset.
+ * 5. Sorts the results to create a "Leaderboard."
  * 
  * Standard higher order functions used ->
  * std::views::filter
