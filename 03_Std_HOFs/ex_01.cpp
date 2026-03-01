@@ -1,6 +1,14 @@
 /**
  * Transaction report
  * 
+ * This code processes financial transactions using C++20/23 functional pipelines:
+ * 1. Filters & Cleans: Keeps only approved transactions and applies a 2% fee.
+ * 2. Parallel Math: Uses multiple cores to calculate Total, Avg, Max, and Min.
+ * 3. Safety Logic: Flags "whales" (>$2k) and verifies zero negative values.
+ * 4. Bucketing: Counts Small, Medium, and Large transaction volumes.
+ * 5. Trends: Generates a running total and a descending leaderboard.
+ * 6. Efficiency: Uses nth_element for a fast Median calculation.
+ *
  * Standard higher order functions used ->
  * std::views::filter
  * std::views::transform
