@@ -1,5 +1,18 @@
 /**
  * Transaction report
+ * 
+ * Standard higher order functions used ->
+ * std::views::filter
+ * std::views::transform
+ * std::transform_reduce
+ * std::max_element
+ * std::min_element
+ * std::all_of
+ * std::any_of
+ * std::none_of
+ * std::ranges::for_each
+ * std::inclusive_scan
+ * std::ranges::sort
  */
 
 #include <iostream>
