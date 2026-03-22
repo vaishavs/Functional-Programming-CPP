@@ -198,7 +198,12 @@ for (auto it = v.begin(); it != v.end() && count < 3; ++it) {
     ++count;
 }
 ```
-The compiler can inline ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
+The compiler also inlines ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
+
+The compiler can:
+* Inline ```operator*()``` and ```operator++()``` through the layers.
+* Recognize that ```m_pred``` and ```m_fn``` are simple functions and keep them inline.
+* Collapse the whole chain into a tight loop with no extra allocation per ```|```.
 
 Use views when:
 * You want zero‑copy pipelines over large or read‑only data.
