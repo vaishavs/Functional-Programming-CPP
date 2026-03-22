@@ -198,8 +198,15 @@ for (auto it = v.begin(); it != v.end() && count < 3; ++it) {
     ++count;
 }
 ```
-The compiler also inlines ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
+The compiler inlines ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
 
+Even though the model is deep,
+```
+take_view
+  → transform_view
+     → filter_view
+        → std::vector
+```
 The compiler can:
 * Inline ```operator*()``` and ```operator++()``` through the layers.
 * Recognize that ```m_pred``` and ```m_fn``` are simple functions and keep them inline.
