@@ -73,7 +73,7 @@ It can be said that:
 The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range.
 
 The ranges library includes:
-* range algorithms (function objects that perform immediate computation and execution of ranges (eager evaluation))
+* range algorithms (function objects that perform immediate computation and execution of ranges ([eager evaluation](https://share.google/aimode/VC6LNDuBwYz1Fow9c)))
 * range adaptors (function objects applied to views that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
 
 Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
