@@ -62,19 +62,22 @@ The execution context, i.e., the data needs to be supplied, on which the algorit
 
 # Modern Improvements
 With the introduction of Ranges and Views in C++20, working with algorithms became more expressive and easier to read. 
-Generally, a pair of iterators is used to move through the beginning and end of a container to perform some computation. This pair of iterators is called as a range.
+A range is a representation of a asequence of elements with a begin iterator and an end sentinel. The ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, composable, and less error-prone.
 
-The ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, composable, and less error-prone.
-A ```std::range``` assumes begin to end by default when passing a container. There are also variants available for more granular control over a container.
+The ranges library includes:
+* range algorithms (function objects that perform immediate computation and execution of ```std::ranges``` ([eager evaluation](https://share.google/aimode/UnfevoWfIYgsIVtjH)))
+* range adaptors (function objects applied to ```std::views``` that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
+
+A ```std::ranges``` algorithm assumes begin to end by default when passing in a container. There are also variants available for more granular control over a container.
 It can be said that:
 * All containers and container adaptors  are ranges
 * Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges
 
-The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range.
+The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is:
+* memory efficient - it does not copy of the elements of the container it works on
+* mutable - modifications to the underlying container are reflected in the view and vice-versa.
 
-The ranges library includes:
-* range algorithms (function objects that perform immediate computation and execution of ranges ([eager evaluation](https://share.google/aimode/UnfevoWfIYgsIVtjH)))
-* range adaptors (function objects applied to views that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
+Custom views can also be created by inheriting from ```std::ranges::view_interface```.
 
 Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
 
@@ -112,13 +115,7 @@ users
 This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
 
-To know more about ranges, watch:
-* https://www.youtube.com/watch?v=5iXUCcFP6H4
-* https://www.youtube.com/watch?v=IpwtNhyXylI
-* https://www.youtube.com/watch?v=qv29fo9sUjY
-* https://www.youtube.com/watch?v=ME1PJmOSMYg
-
-The view adapters defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
+The view adapters are defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform```, and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 
 Sources:
