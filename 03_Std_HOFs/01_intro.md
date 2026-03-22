@@ -121,3 +121,5 @@ The view adapters are defined under ```std::views```, such as ```std::views::fil
 Sources:
 * https://www.youtube.com/watch?v=HYENjkZvsrM
 * https://www.youtube.com/watch?v=Rbl3h0RJuuY
+* https://www.youtube.com/watch?v=Q434UHWRzI0
+* https://www.youtube.com/watch?v=5iXUCcFP6H4
