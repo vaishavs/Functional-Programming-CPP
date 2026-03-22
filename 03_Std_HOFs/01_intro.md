@@ -61,7 +61,22 @@ The execution context, i.e., the data needs to be supplied, on which the algorit
 [![Copilot-20260214-144124.png](https://i.postimg.cc/xTP95pGX/Copilot-20260214-144124.png)](https://postimg.cc/VddyLRVw)
 
 # Modern Improvements
-With the introduction of Ranges and Views in C++20, working with algorithms became more expressive and easier to read. Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
+With the introduction of Ranges and Views in C++20, working with algorithms became more expressive and easier to read. 
+Generally, a pair of iterators is used to move through the beginning and end of a container to perform some computation. This pair of iterators is called as a range.
+
+The ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, composable, and less error-prone.
+A ```std::range``` assumes begin to end by default when passing a container. There are also variants available for more granular control over a container.
+It can be said that:
+* All containers and container adaptors  are ranges
+* Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges
+
+The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range.
+
+The ranges library includes:
+* range algorithms (function objects that perform immediate computation and execution of ranges (eager evaluation))
+* range adaptors (function objects applied to views that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
+
+Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
 
 The general pattern looks like this:
 ```
@@ -98,7 +113,6 @@ This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
 
 To know more about ranges, watch:
-* https://www.youtube.com/watch?v=Q434UHWRzI0
 * https://www.youtube.com/watch?v=5iXUCcFP6H4
 * https://www.youtube.com/watch?v=IpwtNhyXylI
 * https://www.youtube.com/watch?v=qv29fo9sUjY
