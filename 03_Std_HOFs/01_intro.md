@@ -181,7 +181,9 @@ From the address‑space perspective:
 * ```take_view``` stores:
     * A pointer‑like base iterator.
     * Two ```size_t```s: ```m_count```, ```m_max```.
+
 No extra storage for the intermediate sequence ```[2,4,5,6]``` or ```[4,16,25,36]```.
+
 Instead, the machine code for
 ```
 for (int x : pipeline) { ... }
