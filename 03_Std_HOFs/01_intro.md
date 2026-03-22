@@ -65,8 +65,8 @@ With the introduction of Ranges and Views in C++20, working with algorithms beca
 A range is a representation of a asequence of elements with a begin iterator and an end sentinel. The ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, composable, and less error-prone.
 
 The ranges library includes:
-* range algorithms (function objects that perform immediate computation and execution of ```std::ranges``` ([eager evaluation](https://share.google/aimode/UnfevoWfIYgsIVtjH)))
-* range adaptors (function objects applied to ```std::views``` that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
+* range algorithms (function objects that perform immediate computation and execution of ranges ([eager evaluation](https://share.google/aimode/UnfevoWfIYgsIVtjH)))
+* range adaptors (function objects applied to views that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
 
 A ```std::ranges``` algorithm assumes begin to end by default when passing in a container. There are also variants available for more granular control over a container.
 It can be said that:
