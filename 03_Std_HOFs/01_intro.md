@@ -127,8 +127,8 @@ users
 | std::views::transform(get_name);
 ```
 Here:
-* Until the ```for``` loop, only the pipeline structure is built.
-* In the loop, each view’s iterator advances the base and applies the filter/transform on‑the‑fly.
+* Only the pipeline structure is built.
+* At the time of using the result of this pipeline (e.g., for printing), each view’s iterator advances the base and applies the filter/transform on‑the‑fly.
 
 This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
