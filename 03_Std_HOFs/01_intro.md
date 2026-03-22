@@ -69,6 +69,18 @@ The ranges library includes:
 * range adaptors (function objects applied to views that perform computations at a later time when needed ([lazy evaluation](https://nixiz.github.io/yazilim-notlari/2023/09/10/lazy-evaluation-en))).
 
 A ```std::ranges``` algorithm assumes begin to end by default when passing in a container. There are also variants available for more granular control over a container.
+
+In C++20, ranges are builds on concepts:
+
+```std::ranges::range<T>```
+where ```T``` must have ```begin(t)``` and ```end(t)``` that return valid iterators.
+
+And they are refined by the iterator categories:
+* ```std::ranges::input_range``` → forward‑only, single‑pass.
+* ```std::ranges::forward_range``` → bidi‑capable, multiple passes.
+* ```std::ranges::bidirectional_range```, ```std::ranges::random_access_range```, ```std::ranges::contiguous_range```.
+* ```std::ranges::common_range``` → ```begin(t)``` and ```end(t)``` return the same type (no separate sentinel).
+
 It can be said that:
 * All containers and container adaptors  are ranges
 * Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges
@@ -76,6 +88,8 @@ It can be said that:
 The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is:
 * memory efficient - it does not copy of the elements of the container it works on
 * mutable - modifications to the underlying container are reflected in the view and vice-versa.
+
+The view adapters are defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` for instance, and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 Custom views can also be created by inheriting from ```std::ranges::view_interface```.
 
@@ -106,16 +120,58 @@ This approach:
 * Separates steps instead of expressing a continuous flow
 * Can cause memory and performance overhead
 
-With ranges, no intermediate containers are needed. The above example would then look like:
+With ranges, no intermediate containers are needed. One of the big design wins of ranges is that composition is natural and efficient. The above example would then look like:
 ```
 users 
 | std::views::filter(is_active) 
 | std::views::transform(get_name);
 ```
+Here:
+* Until the ```for``` loop, only the pipeline structure is built.
+* In the loop, each view’s iterator advances the base and applies the filter/transform on‑the‑fly.
+
 This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
 
-The view adapters are defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` for instance, and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
+This contract ensures that:
+* Many views can be chained without performance collapse.
+* Views can be passed cheaply (by value) into algorithms or functions
+
+Because views are non‑owning, it must be ensured that the underlying range outlives the view.
+```
+auto make_view() {
+    std::vector<int> local = {1, 2, 3};
+    auto v = local | std::views::filter([](int x) { return x > 1; });
+    return v;   // DANGER: local is destroyed when function returns
+}
+
+for (int x : make_view()) { ... } // Undefined behavior!
+```
+To avoid this, either:
+* Keep the base alive:
+```
+std::vector<int> data = {1, 2, 3};
+auto pipeline = data | std::views::filter(...);
+for (int x : pipeline) { }   // OK
+```
+* Or store the result:
+```
+std::vector<int> stored;
+std::ranges::copy(pipeline, std::back_inserter(stored));
+```
+
+Use views when:
+* You want zero‑copy pipelines over large or read‑only data.
+* The underlying data is stable and long‑lived.
+* The transformations are cheap (simple arithmetic, light lambdas).
+* You iterate once or a few times.
+
+Use containers when:
+* You need persistent storage of the result.
+* You iterate many times over the same data.
+* The transform/filter is expensive (e.g., calls a heavy function or I/O).
+* The data source is ephemeral or you cannot guarantee lifetime. [web:5][web:10]
+
 
 
 Sources:
