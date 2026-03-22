@@ -122,13 +122,13 @@ This approach:
 
 With ranges, no intermediate containers are needed. One of the big design wins of ranges is that composition is natural and efficient. The above example would then look like:
 ```
-users 
+auto result = users 
 | std::views::filter(is_active) 
 | std::views::transform(get_name);
 ```
 Here:
 * Only the pipeline structure is built.
-* At the time of using the result of this pipeline (e.g., for printing), each view’s iterator advances the base and applies the filter/transform on‑the‑fly.
+* At the time of using ```result``` (e.g., for printing each element of ```result```), each view’s iterator advances the base and applies the filter/transform on‑the‑fly.
 
 This reads almost like an English sentence:
 Take users → keep only active ones → extract their names.
