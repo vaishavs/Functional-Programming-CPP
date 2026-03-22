@@ -1,34 +1,6 @@
-Consider a pipeline
-```
-auto pipeline = v
-    | std::views::filter(pred1)
-    | std::views::transform(fn1)
-    | std::views::take(3);
-```
-This is equivalent to:
-```
-auto pipeline = std::views::take(3)(
-                    std::views::transform(fnLifetime&&>
-
-Where each adaptor is a **stateless object** (or very lightweight) that returns a **view type**:
-
-- `take_view`  
-  - contains `transform_view`  
-  - contains `filter_view`  
-  - contains a reference to `v`. [web:1][web:3][web:5]
-
-Compiler‑level view:
-
-- The type of `pipeline` is some nested template like `take_view<transform_view<filter_view<decltype(v)>>, predicate_type, fn_type>`.  
-- The compiler can optimize this aggressively because all operations are **constant‑time at the adaptor level**; the real cost is in the iterator. [web:1][web:5]
-
----
-
-### 4. Iteration down the pipeline: full step‑by‑step
-
 Let’s trace a concrete example:
 
-```cpp
+```
 std::vector<int> v = { -1, 2, -3, 4, 5, 6 };
 
 auto pipeline = v
