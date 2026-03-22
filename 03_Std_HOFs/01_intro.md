@@ -160,6 +160,44 @@ std::vector<int> stored;
 std::ranges::copy(pipeline, std::back_inserter(stored));
 ```
 
+Full execution trace: where the bytes live
+
+Let's take an example:
+```
+std::vector<int> v = {-1, 2, -3, 4, 5, 6};
+auto pipeline = v
+    | std::views::filter([](int x) { return x > 0; }) // 2,4,5,6
+    | std::views::transform([](int x) { return x * x; }) // 4,16,25,36
+    | std::views::take(3);
+
+for (int x : pipeline) { /* 4, 16, 25 */ }
+```
+From the address‑space perspective:
+* ```v``` owns a contiguous buffer: ```[-1, 2, -3, 4, 5, 6]```.
+* ```filter_view``` stores a pointer‑like view into this buffer (```m_base``` ≈ ```v.data()``` and ```v.size()```).
+* ```transform_view``` stores only:
+    * Another pointer‑like base iterator.
+    * A small function‑object ```fn``` (likely just a ```size_t```‑sized lambda).
+* ```take_view``` stores:
+    * A pointer‑like base iterator.
+    * Two ```size_t```s: ```m_count```, ```m_max```.
+No extra storage for the intermediate sequence ```[2,4,5,6]``` or ```[4,16,25,36]```.
+Instead, the machine code for
+```
+for (int x : pipeline) { ... }
+```
+can be optimized into a loop that conceptually looks like:
+```
+int count = 0;
+for (auto it = v.begin(); it != v.end() && count < 3; ++it) {
+    if (*it <= 0) continue;
+    int x = *it * *it;
+    // ... use x
+    ++count;
+}
+```
+The compiler can inline ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
+
 Use views when:
 * You want zero‑copy pipelines over large or read‑only data.
 * The underlying data is stable and long‑lived.
