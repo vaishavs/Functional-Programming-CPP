@@ -185,7 +185,9 @@ auto make_view() {
 
 for (int x : make_view()) { ... } // Undefined behavior!
 ```
-To avoid this, either:
+The code above demonstrates a "dangling view." When we try to use the result, the vector ```v``` is already gone, leading to undefined behavior.
+
+To avoid this situation, either:
 * Keep the base alive:
 ```
 std::vector<int> data = {1, 2, 3};
