@@ -73,6 +73,7 @@ A ```std::ranges``` algorithm assumes begin to end by default when passing in a 
 In C++20, ranges are builds on concepts:
 
 ```std::ranges::range<T>```
+
 where ```T``` must have ```begin(t)``` and ```end(t)``` that return valid iterators.
 
 And they are refined by the iterator categories:
