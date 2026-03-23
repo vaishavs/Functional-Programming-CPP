@@ -88,17 +88,21 @@ And they are refined by the iterator categories:
 Each concept refines the previous one, progressively requiring more capabilities:
 ```
 range
- └── input_range          (single-pass, read-only)
-      └── forward_range   (multi-pass, read)
-           └── bidirectional_range  (can go backwards)
-                └── random_access_range  (O(1) jump to any position)
-                     └── contiguous_range (elements in contiguous memory)
+├── input_range         (single-pass)
+│   └── forward_range   (multi-pass)
+│       └── bidirectional_range
+│           └── random_access_range
+│               └── contiguous_range
+├── sized_range         (O(1) size())   [orthogonal]
+├── common_range        (begin/end same type) [orthogonal]
+├── borrowed_range      (iterators outlive range) [orthogonal]
+└── view                (O(1) move/copy/destroy) [orthogonal]
 ```
 These concepts are checked statically at compile time. 
 
 It can be said that:
 * All containers and container adaptors  are ranges
-* Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges. A range is "borrowed" if iterating over it does not depend on the lifetime of the underlying range object itself.
+* Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges. A range is "borrowed" if iterating over it does not depend on the lifetime of the range object itself.
 
 The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is:
 * memory efficient - it does not copy of the elements of the container it works on
@@ -205,6 +209,12 @@ std::vector<int> stored;
 std::ranges::copy(pipeline, std::back_inserter(stored));
 ```
 
+* Or materialize with ```std::ranges::to``` (Since C++23 and GCC v16)
+```
+std::vector<int> vec;
+// Works from C++23 and GCC v16 onwards
+auto result_vec = std::ranges::to<std::vector<int>>(vec);
+```
 Let's take an example:
 ```
 std::vector<int> v = {-1, 2, -3, 4, 5, 6};
