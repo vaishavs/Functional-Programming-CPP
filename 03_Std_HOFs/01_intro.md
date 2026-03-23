@@ -78,7 +78,10 @@ where ```T``` must have ```begin(t)``` and ```end(t)``` that return valid iterat
 And they are refined by the iterator categories:
 * ```std::ranges::input_range``` → forward‑only, single‑pass.
 * ```std::ranges::forward_range``` → bidi‑capable, multiple passes.
-* ```std::ranges::bidirectional_range```, ```std::ranges::random_access_range```, ```std::ranges::contiguous_range```.
+* ```std::ranges::bidirectional_range``` → can traverse backwards
+* ```std::ranges::random_access_range``` → O(1) random element access
+* ```std::ranges::contiguous_range``` → elements are laid out contiguously in memory (enables pointer arithmetic)
+* ```std::ranges::sized_range``` → size() is available in O(1)
 * ```std::ranges::common_range``` → ```begin(t)``` and ```end(t)``` return the same type (no separate sentinel).
 
 Each concept refines the previous one, progressively requiring more capabilities:
@@ -90,10 +93,11 @@ range
                 └── random_access_range  (O(1) jump to any position)
                      └── contiguous_range (elements in contiguous memory)
 ```
+These concepts are checked statically at compile time. 
 
 It can be said that:
 * All containers and container adaptors  are ranges
-* Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges
+* Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges. A range is "borrowed" if iterating over it does not depend on the lifetime of the underlying range object itself.
 
 The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is:
 * memory efficient - it does not copy of the elements of the container it works on
