@@ -81,6 +81,16 @@ And they are refined by the iterator categories:
 * ```std::ranges::bidirectional_range```, ```std::ranges::random_access_range```, ```std::ranges::contiguous_range```.
 * ```std::ranges::common_range``` → ```begin(t)``` and ```end(t)``` return the same type (no separate sentinel).
 
+Each concept refines the previous one, progressively requiring more capabilities:
+```
+range
+ └── input_range          (single-pass, read-only)
+      └── forward_range   (multi-pass, read)
+           └── bidirectional_range  (can go backwards)
+                └── random_access_range  (O(1) jump to any position)
+                     └── contiguous_range (elements in contiguous memory)
+```
+
 It can be said that:
 * All containers and container adaptors  are ranges
 * Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges
@@ -89,9 +99,37 @@ The namespace alias ```std::views``` is provided as a shorthand for ```std::rang
 * memory efficient - it does not copy of the elements of the container it works on
 * mutable - modifications to the underlying container are reflected in the view and vice-versa.
 
+A view must satisfy:
+```
+template<typename V>
+concept view = std::ranges::range<V>
+            && std::movable<V>
+            && std::ranges::enable_view<V>; // opt-in marker
+```
+And additionally, all these operations must be O(1):
+* Move construction
+* Move assignment
+* Destruction
+* Copy construction (if supported)
+* Copy assignment (if supported)
+This O(1) constraint is the essential rule: a view must **never** copy the underlying data. It only holds a reference/pointer/iterator to it.
+
+
 The view adapters are defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` for instance, and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 Custom views can also be created by inheriting from ```std::ranges::view_interface```.
+```
+template<std::ranges::view V>
+class my_view : public std::ranges::view_interface<my_view<V>> {
+    V base_;
+public:
+    my_view() = default;
+    my_view(V base) : base_(std::move(base)) {}
+
+    auto begin() { return std::ranges::begin(base_); }
+    auto end()   { return std::ranges::end(base_); }
+};
+```
 
 Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
 
@@ -172,6 +210,27 @@ auto pipeline = v
 
 for (int x : pipeline) { /* 4, 16, 25 */ }
 ```
+The type of `pipeline` is something like:
+```
+take_view
+  → transform_view
+     → filter_view
+        → ref_view
+            → vector
+```
+This is a nested type — a compile-time description of the computation. No elements are touched. 
+
+The flow begins with ```*pipeline.begin()```, followed which:
+1. ```take_view::iterator::operator*()``` is called
+2. ```transform_view::iterator::operator*()``` is called
+3. It calls ```filter_view::iterator::operator*()```
+4. Which advances until predicate is satisfied
+5. Which calls ```ref_view::iterator::operator*()```
+6. Which reads from the vector
+7. The value flows back up through transform
+
+Each element of the underlying container is processed on demand, one at a time, with the full pipeline fused together. The compiler typically inlines everything into a tight loop.
+
 From the address‑space perspective:
 * ```v``` owns a contiguous buffer: ```[-1, 2, -3, 4, 5, 6]```.
 * ```filter_view``` stores a pointer‑like view into this buffer (```m_base``` ≈ ```v.data()``` and ```v.size()```).
@@ -182,7 +241,7 @@ From the address‑space perspective:
     * A pointer‑like base iterator.
     * Two ```size_t```s: ```m_count```, ```m_max```.
 
-No extra storage for the intermediate sequence ```[2,4,5,6]``` or ```[4,16,25,36]```.
+No extra storage is allocated for the intermediate sequence ```[2,4,5,6]``` or ```[4,16,25,36]```.
 
 Instead, the machine code for
 ```
