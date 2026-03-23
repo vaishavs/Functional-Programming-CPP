@@ -225,7 +225,7 @@ take_view
 ```
 This is a nested type — a compile-time description of the computation. No elements are touched. 
 
-The flow begins with ```*pipeline.begin()```, followed which:
+The flow begins with ```*pipeline.begin()```, following which:
 1. ```take_view::iterator::operator*()``` is called
 2. ```transform_view::iterator::operator*()``` is called
 3. It calls ```filter_view::iterator::operator*()```
