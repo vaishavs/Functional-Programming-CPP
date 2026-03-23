@@ -70,7 +70,7 @@ The ranges library includes:
 
 A ```std::ranges``` algorithm assumes begin to end by default when passing in a container. There are also variants available for more granular control over a container.
 
-In C++20, ranges are builds on concepts:
+In C++20, ```std::ranges``` are built on concepts:
 
 ```std::ranges::range<T>```
 
@@ -93,10 +93,10 @@ range
 │       └── bidirectional_range
 │           └── random_access_range
 │               └── contiguous_range
-├── sized_range         (O(1) size())   [orthogonal]
-├── common_range        (begin/end same type) [orthogonal]
-├── borrowed_range      (iterators outlive range) [orthogonal]
-└── view                (O(1) move/copy/destroy) [orthogonal]
+├── sized_range     (O(1) size())   [orthogonal]
+├── common_range    (begin/end same type) [orthogonal]
+├── borrowed_range  (iterators outlive range) [orthogonal]
+└── view            (O(1) move/copy/destroy) [orthogonal]
 ```
 These concepts are checked statically at compile time. 
 
@@ -237,7 +237,7 @@ This is a nested type — a compile-time description of the computation. No elem
 
 The flow begins with ```*pipeline.begin()```, following which:
 1. ```take_view::iterator::operator*()``` is called
-2. ```transform_view::iterator::operator*()``` is called
+2. Which calls ```transform_view::iterator::operator*()```
 3. It calls ```filter_view::iterator::operator*()```
 4. Which advances until predicate is satisfied
 5. Which calls ```ref_view::iterator::operator*()```
