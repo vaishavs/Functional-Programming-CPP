@@ -198,8 +198,6 @@ std::vector<int> stored;
 std::ranges::copy(pipeline, std::back_inserter(stored));
 ```
 
-Full execution trace: where the bytes live
-
 Let's take an example:
 ```
 std::vector<int> v = {-1, 2, -3, 4, 5, 6};
