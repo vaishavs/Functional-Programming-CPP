@@ -1,4 +1,3 @@
-/* Works with C++23 and GCC v16 onwards*/
 #include <iostream>
 #include <vector>
 #include <string>
