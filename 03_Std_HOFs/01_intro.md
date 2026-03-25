@@ -62,7 +62,7 @@ The execution context, i.e., the data needs to be supplied, on which the algorit
 
 # Modern Improvements
 With the introduction of Ranges and Views in C++20, working with algorithms became more expressive and easier to read. 
-A range is a representation of a asequence of elements with a begin iterator and an end sentinel. The ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, composable, and less error-prone.
+A range is a representation of a asequence of elements with a begin iterator and an end sentinel. The standard ranges library, defined in the ```<ranges>``` header, is an extension and generalization of the standard algorithms and iterator libraries, which makes it more powerful, flexible, composable, and less error-prone.
 
 The ranges library includes:
 * range algorithms (function objects that perform immediate computation and execution of ranges ([eager evaluation](https://share.google/aimode/UnfevoWfIYgsIVtjH)))
