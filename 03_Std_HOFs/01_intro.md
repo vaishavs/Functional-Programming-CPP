@@ -150,6 +150,12 @@ Data | View_Adapter | Action
 * View Adapter → A transformation or filtering step that describes how the data should be processed.
 * Action → The final step where the result is actually consumed (for example, printing or storing values).
 
+The pipe operator ```|``` is used to chain range adaptors. The left-hand side of the pipe is always a range. The right-hand side is an adaptor object that stores adaptor parameters. This two-step design — first create the holder, then apply it to a range via ```|``` — is what enables a clean syntax. The semantic contract of the pipe operator is that the right-hand side is always applied to the left-hand side, producing a new range. The original range is not modified. The new range is a lazy view — it wraps the original rather than copying it. This means that the lifetime of the original range must exceed the lifetime of the view. 
+
+Chaining pipes creates a tree of wrapper objects rooted at the original range. Each layer adds a small constant amount of overhead per element access. The C++ optimizer can typically inline through all these layers and produce machine code that is nearly as efficient as a hand-written loop with all the logic inlined, particularly with modern compilers and optimization levels. 
+
+It must be kept in mind that the full type of a deeply composed pipeline can be extraordinarily long and complex. If a compilation error is generated in a pipeline expression, the error message will typically dump this full nested type, which can be hundreds or thousands of characters long. Learning to read these errors requires practice and a clear mental model of which adaptor corresponds to which layer. Working from the inside out makes these errors tractable. The ```auto``` keyword is essential when working with adapted ranges precisely because the types are so complex and unwriteable by hand. The ```auto``` deduced type will be the full nested (hidden) type, which is correct and efficient.
+
 Consider a traditional STL example:
 ```
 std::vector<User> active_users;
@@ -184,7 +190,7 @@ This contract ensures that:
 * Many views can be chained without performance collapse.
 * Views can be passed cheaply (by value) into algorithms or functions
 
-Because views are non‑owning, it must be ensured that the underlying range outlives the view.
+Views are non‑owning, so it must be ensured that the underlying range outlives the view.
 ```
 auto make_view() {
     std::vector<int> local = {1, 2, 3};
