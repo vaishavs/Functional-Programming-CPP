@@ -48,8 +48,9 @@ SinglePassRange
 ```
 Boost.Range provides compile-time concept-checking classes in ```<boost/range/concepts.hpp>```. If the concept fails, it produces undefined behavior at best and silently wrong results at worst. The ```BOOST_CONCEPT_ASSERT``` macro is the primary tool for producing early, meaningful errors rather than late, cryptic ones. When a concept assertion is added at the beginning of a function template, the compiler checks the concept requirements immediately when it instantiates the function. If the requirements are not satisfied, an error pointing at the assertion is produced, with a clear message about which concept was violated. Without the assertion, the compiler would proceed into the function body, fail on some specific expression deep inside, and report an error that refers to implementation details rather than the interface contract.
 
-## Layered architecture in Boost.Range
-Boost.Range employs a layered architecture to progressively abstract over raw iterators, unifying sequence access while preserving performance through thin, composable layers, each building on the one below it.
+## Levels of abstraction in Boost.Range
+Even though the documentation does not advertise Boost.Range as a layered architecture, its design naturally forms layers in a conceptual sense, with increasing levels of abstraction from raw iterators up to generic range‑based algorithms and adaptors.
+
 ```
 +-----------------------+
 | Utility classes       |
@@ -146,130 +147,7 @@ In this example:
 ```v → filter → transform → sort → result```
 
 The right side of operator `|` defines an "adaptor holder" type that captures the adaptor's parameters (the predicate, the function, the stride, etc.) but has not yet been bound to a specific range. In the above example, in `v | filtered(pred)`, the `operator |` overload for the range type and the filtered holder is invoked, producing a new range type that wraps `v` with a filter iterator, so it can be piped through another adaptor.
-## Boost.Range vs STL ranges
-Boost.Range shines over raw STL iterators when code readability, genericity, and composability outweigh micro-optimizations, particularly in modern C++ workflows pre-C++20. 
-### Prefer Boost.Range When...
-### 1. Unifying Heterogeneous Sequence Types
-Raw iterators force per-type boilerplate; Boost.Range handles them uniformly.  
-```
-int arr[] = {1,2,3};
-std::vector<int> vec = {4,5,6};
-std::pair<int*,int*> pair_it(arr, arr+3);
-std::string s = "abc";
-```
-**STL verbosity**:  
-```
-process(vec.begin(), vec.end());
-process(arr, arr+3);
-process(pair_it.first, pair_it.second);
-process(s.begin(), s.end());
 
-```
-**Boost.Range** (one function):  
-  
-```
-process(vec); process(arr); process(pair_it); process(s);
-```
-**Use case**: Generic libraries, callbacks accepting "any sequence".  
-### 2. Composing Lazy Pipelines (Pre-C++20)  
-No STL equivalent for chained filtering/transforming without temporaries.  
-```
-// STL: 3 passes, 2 temp vectors
-auto odds = copy_if(vec.begin(), vec.end(), back_inserter(tmp1), is_odd);
-auto squares = transform(odds.begin(), odds.end(), tmp2, square);
-
-// Boost: Single-pass, zero-copy view
-auto pipeline = vec | filtered(is_odd) | transformed(square) | sliced(1,4);
-boost::for_each(pipeline, print);  // Lazy evaluation
-
-```
-**Use case**: Data processing pipelines, ETL, stream processing.  
-### 3. Reducing Iterator Boilerplate (Repetition Reduction)  
-STL requires begin()/end() everywhere; Boost.Range algorithms take containers directly.  
-  
-```
-// STL: 8 tokens
-auto it = std::find(vec.begin(), vec.end(), 42);
-
-// Boost: 4 tokens  
-auto it = boost::find(vec, 42);
-```
-**Use case**: Prototyping, tutorials, code golf, hot-path readability.  
-### 4. Working with Legacy/Non-Standard Types  
-Arrays, C-strings, streams need special handling in STL.  
-  
-```
-// STL arrays require sizeof/pointer math
-std::copy(arr, arr + sizeof(arr)/sizeof(arr[0]), out);
-
-// Boost: Natural
-boost::copy(arr, out);
-boost::copy(boost::istream_range<int>(std::cin), out);
-```
-### 5. Subrange Handling  
-`boost::find()` returns iterator_range; no manual pairing.  
-  
-```
-auto found_range = boost::find(vec, 42);  // [found, end)
-if (!boost::empty(found_range)) {
-    boost::copy(boost::adaptors::sliced(1,3)(found_range), out);
-}
-```
-## Prefer STL Iterators When...  
-### 1. Maximum Performance Critical Hot Paths  
-```
-// STL: Direct, unrolled
-for (auto it = vec.begin(); it != vec.end(); ++it) {
-    if (pred(*it)) *out++ = *it;
-}
-
-// Boost copy_if: Slight fusion overhead (1-3% measurable)
-boost::copy_if(vec, out, pred);
-```
-**Microbench threshold**: >10M elements/second, profiling shows >5% regression.  
-### 2. Fine-Grained Iterator Control  
-* Manual `advance(it, n)` on random-access  
-* `std::next/prev(it, n)` with category detection  
-* Iterator invalidation patterns (erase-returned iterator)  
-### 3. C++20 Ranges Available  
-```
-// Native, standard, optimized
-auto pipeline = vec | std::views::filter(is_odd) | std::views::transform(square);
-```
-### 4. Template Bloat Sensitivity  
-Boost headers (~2MB preprocessed) vs STL's minimal includes.  
-### 5. Mutation-Heavy Code  
-Views invalidate on container resize/erase; iterators give explicit control.  
-```
-// STL: Safe
-auto it = vec.erase(vec.begin() + 5);  // it valid for [new_pos, end)
-std::copy(it, vec.end(), out);         // Explicit
-
-// Boost: Trap
-auto rng = vec | sliced(5, 10);
-vec.erase(vec.begin() + 5);            // rng dangles!
-```
-### Decision Matrix
-| Scenario                 | Boost.Range       | STL Iterators    |
-| ------------------------ | ----------------- | ---------------- |
-| Generic library APIs     | ✅ Best            | ❌ Verbose        |
-| Data pipelines           | ✅ Best            | ❌ No composition |
-| Prototyping/readability  | ✅ Best            | ❌ Boilerplate    |
-| Hot path perf (>10M/sec) | ⚠️ Profile         | ✅ Best           |
-| C++20+ projects          | ⚠️ Use `std::ranges` | ✅ With views     |
-| Legacy array/streams     | ✅ Best            | ❌ Manual         |
-| Mutation-heavy           | ⚠️ Careful         | ✅ Best           |
-  
-****Hybrid Sweet Spot****  
-**Most practical**: Use Boost.Range for APIs/pipelines, fall back to iterators for perf-critical kernels.  
-```
-template<typename Range>
-void high_level_process(Range&& rng) {
-    auto filtered = rng | filtered(pred);
-    perf_critical_kernel(boost::begin(filtered), boost::end(filtered));
-}
-```
-This gets genericity + optimal inner loops.
 
 ## Common pitfalls   
 While Boost.Range is an exceptionally powerful tool for creating clean, functional C++ code, its reliance on lazy evaluation and template metaprogramming introduces specific traps that can lead to "heisenbugs" or significant performance degradation if one is not careful.  
