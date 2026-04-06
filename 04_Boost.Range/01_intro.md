@@ -25,27 +25,27 @@ auto std_view = numbers | std::views::filter(is_even)
 
 
 ## Range concept hierarchy
-Boost.Range relies heavily on concepts. A concept, in the sense used by Boost.Range, is a named set of requirements imposed on a type at compile-time. These requirements are of two types:
-* syntactical requirements: what expressions must be valid
-* semantical requirements: what those expressions must mean.
-
-A type is said to model a concept if and only if it satisfies all of the concept's syntactic and semantic requirements.
-
-It defines a hierarchy of range concepts mirroring iterator categories:
+Boost.Range defines a strict concept hierarchy, mirroring standard iterator categories, each building on the previous one:
 | Range Concept    | Description |
 | ------- | :---: |
 | SinglePassRange   | Can be traversed once (like input iterators)    |
 | ForwardRange   | Multi-pass, forward traversal    |
 | BidirectionalRange | Forward + backward traversal |
 | RandomAccessRange | $O(1)$ element access |
-	
-Boost.Range defines a strict concept hierarchy, each building on the previous one:
+
 ``` 
 SinglePassRange 
 	└── ForwardRange 
 			└── BidirectionalRange 
 					└── RandomAccessRange
 ```
+
+Boost.Range relies heavily on concepts. A concept, in the sense used by Boost.Range, is a named set of requirements imposed on a type at compile-time. These requirements are of two types:
+* syntactical requirements: what expressions must be valid
+* semantical requirements: what those expressions must mean.
+
+A type is said to model a concept if and only if it satisfies all of the concept's syntactic and semantic requirements.
+
 Boost.Range provides compile-time concept-checking classes in ```<boost/range/concepts.hpp>```. If the concept fails, it produces undefined behavior at best and silently wrong results at worst. The ```BOOST_CONCEPT_ASSERT``` macro is the primary tool for producing early, meaningful errors rather than late, cryptic ones. The macro requires double parentheses to work correctly, such as `BOOST_CONCEPT_ASSERT((ConceptName<Type>))`. When a concept assertion is added at the beginning of a function template, the compiler checks the concept requirements immediately when it instantiates the function. If the requirements are not satisfied, an error pointing at the assertion is produced, with a clear message about which concept was violated. Without the assertion, the compiler would proceed into the function body, fail on some specific expression deep inside, and report an error that refers to implementation details rather than the interface contract.
 
 ## Levels of abstraction in Boost.Range
@@ -86,7 +86,7 @@ auto r = c | boost::adaptors::reversed;
 
 #### Layer 2: Core Concepts and Traits
 This layer consists of traits and iterators. It provides the fundamental definitions and metadata required to treat any sequence as a range. This layer defines what a range is (concepts) and how to extract information about its types (traits), allowing the library to "inspect" a range at compile-time.
-* Traits: ```boost::range_iterator<Rng>::type```, ```range_value<Rng>::type / range_reference::type<Rng>```, ```range_category<Rng>::type```, etc., to deduce types at compile-time. These metafunctions serve an analogous role to `std::iterator_traits` in the STL, but operate at the level of the range rather than the iterator.
+* Traits: ```boost::range_iterator<Rng>::type```, ```range_value<Rng>::type / range_reference::type<Rng>```, ```range_category<Rng>::type```, etc., to deduce types at compile-time. These metafunctions serve an analogous role to `std::iterator_traits` in the STL.
 * Requirements: ```size()```, ```begin(rng)/end(rng)```, ```rbegin()/rend()``` to validate ```[first, last)```.
 
 #### Layer 3: The Free-Standing Functions Layer (universal lazy adaptors)
