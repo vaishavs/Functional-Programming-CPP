@@ -90,7 +90,9 @@ This layer consists of traits and iterators. It provides the fundamental definit
 * Requirements: ```size()```, ```begin(rng)/end(rng)```, ```rbegin()/rend()``` to validate ```[first, last)```.
 
 #### Layer 3: Utility helpers
-These classes provide the infrastructure to turn raw pointers, iterator pairs, or custom data structures into first-class ranges. They act as the primary "glue" when a range other than a standard container needs to be  stored, returned, or passed. They are small but powerful building blocks that support the layered design. They don’t usually perform algorithms themselves—instead, they enable ranges to exist, adapt, and interoperate cleanly. Boost.Range contains several utility classes, some of which are:
+These classes provide the infrastructure to turn raw pointers, iterator pairs, or custom data structures into first-class ranges. They act as the primary "glue" when a range other than a standard container needs to be  stored, returned, or passed. They are small but powerful building blocks that support the layered design. They don’t usually perform algorithms themselves—instead, they enable ranges to exist, adapt, and interoperate cleanly. They expose a complete range interface to the adaptor and algorithm layers above.
+
+Boost.Range contains several utility classes, some of which are:
 * ```boost::iterator_range<It>```: Pairs iterators with range interface (size via distance).
   This is the most general helper class in the library. It is templated on an iterator type and simply wraps a begin and end iterator into a single object that models a Forward Range. It is used to work on a portion of a container. For example:
     ```
@@ -103,6 +105,7 @@ These classes provide the infrastructure to turn raw pointers, iterator pairs, o
 	    std::vector<int> val = {0, 1, 2, 3, 4, 5};
 
 	    auto sub_range = boost::make_iterator_range(val.begin() + 1, val.begin() + 4);
+    
 		// Now, sub_range behaves like containers
 	    std::cout << std::boolalpha << sub_range.empty() << "\n";
 	}
@@ -117,6 +120,7 @@ These classes provide the infrastructure to turn raw pointers, iterator pairs, o
 	
 	int main() {
 	    std::vector<int> val = {0, 1, 2, 3, 4, 5};
+    
 	    boost::sub_range<std::vector<int>> mid(
 	        sub_range.begin() + 1,
 	        sub_range.end() - 1
