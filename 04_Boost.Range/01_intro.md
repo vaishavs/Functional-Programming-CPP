@@ -282,7 +282,7 @@ Nothing special is needed at each step — it just works because the layer contr
 
 ## Common pitfalls   
 While Boost.Range is an exceptionally powerful tool for creating clean, functional C++ code, its reliance on lazy evaluation and template metaprogramming introduces specific traps that can lead to "heisenbugs" or significant performance degradation if one is not careful.  
-### 1. The Dangling Range (Lifetime Issues)  
+#### 1. The Dangling Range (Lifetime Issues)  
 This is the most frequent and dangerous pitfall. Because range adaptors are **lazy views** and not containers, they do not own the data they point to; they only hold a reference or an iterator to the original container.  
 
 If a temporary container is created, adapted, and then that adaptor is used after the temporary is destroyed, there is a dangling reference.  
@@ -297,7 +297,7 @@ for (int x : view) { // UNDEFINED BEHAVIOR: Accessing deleted memory
 ```  
 **The Fix:** It must always be ensured that the underlying container outlives any adaptors or `iterator_range` objects derived from it. If it is needed to return a transformed range from a function, it is recommended to copy the results into a new `std::vector` using `boost::copy`.  
   
-### 2. Double Processing in Pipelines  
+#### 2. Double Processing in Pipelines  
 Because adaptors are lazy, the transformation logic is executed **every time** you iterate over the range. If the transformation function is computationally expensive (like a complex math calculation or a database lookup), calling it multiple times can tank performance.  
 ```  
 auto heavy_view = data | boost::adaptors::transformed(expensive_calculation);  
@@ -310,7 +310,7 @@ boost::copy(heavy_view, std::back_inserter(vec2));
 ```  
 **The Fix:** To iterate over a transformed range more than once, it is recommended to materialize the range into a container first.  
   
-### 3. Modifying the Underlying Container  
+#### 3. Modifying the Underlying Container  
 Range iterators are just wrappers around the container's iterators. If an action is performed that invalidates the container's iterators (like a `push_back` on a `std::vector `which might trigger a reallocation), the range adaptors become instantly invalid.  
 ```  
 std::vector<int> vec = {1, 2, 3};  
@@ -319,11 +319,11 @@ auto view = vec | boost::adaptors::filtered(is_odd);
 vec.push_back(4); // Potential reallocation!  
 // 'view' is now likely pointing to garbage memory.  
 ```  
-### 4. The "Length-Change" Illusion  
+#### 4. The "Length-Change" Illusion  
 Adaptors like filtered change the **perceived** size of the range, but they do not change the complexity of certain operations. For instance, calling `boost::size()` on a filtered range is an $O(N)$ operation, not $O(1)$, because the library has to traverse the entire underlying range to count how many elements pass the filter.  
 **The Pitfall:** Writing code that assumes `boost::size(my_range)` is cheap inside a loop. This can accidentally turn an $O(N)$ algorithm into an $O(N^2)$ disaster.  
   
-### 5. Type Erasure Overhead with `any_range`  
+#### 5. Type Erasure Overhead with `any_range`  
 Sometimes it is necessary to hide the complex template type of a range (e.g., when returning a range from a virtual function). Boost provides `any_range` for this purpose. However, `any_range` uses **Type Erasure** (similar to `std::function`), which involves virtual function calls for every increment and dereference.  
 **The Pitfall:** Using `any_range` in high-frequency, performance-critical inner loops. The overhead of virtual calls can be 10x slower than a direct template-based range.  
   
