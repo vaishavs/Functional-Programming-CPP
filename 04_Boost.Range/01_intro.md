@@ -49,7 +49,7 @@ A type is said to model a concept if and only if it satisfies all of the concept
 Boost.Range provides compile-time concept-checking classes in ```<boost/range/concepts.hpp>```. If the concept fails, it produces undefined behavior at best and silently wrong results at worst. The ```BOOST_CONCEPT_ASSERT``` macro is the primary tool for producing early, meaningful errors rather than late, cryptic ones. The macro requires double parentheses to work correctly, such as `BOOST_CONCEPT_ASSERT((ConceptName<Type>))`. When a concept assertion is added at the beginning of a function template, the compiler checks the concept requirements immediately when it instantiates the function. If the requirements are not satisfied, an error pointing at the assertion is produced, with a clear message about which concept was violated. Without the assertion, the compiler would proceed into the function body, fail on some specific expression deep inside, and report an error that refers to implementation details rather than the interface contract.
 
 ## Levels of abstraction in Boost.Range
-Even though the documentation does not advertise Boost.Range as a layered architecture, its design naturally forms layers of components building on each other, with increasing levels of abstraction from raw iterators up to generic range‑based algorithms and adaptors, in a conceptual sense.
+Even though the documentation does not advertise Boost.Range as a layered architecture, its design naturally forms layers of components in a conceptual sense, with increasing levels of abstraction from raw iterators up to generic range‑based algorithms and adaptors.
 
 ```
 +-----------------------+
