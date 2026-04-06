@@ -179,7 +179,7 @@ auto result = v
 for (int x : result) std::cout << x << " ";
 ```
 #### Layer 5: Range algorithms
-This layer consists of around 70+ algorithm wrappers to STL equivalents using Layer 2 functions, defined in ```<boost/range/algorithm.hpp>```, e.g., ```boost::for_each(rng, f)```, ```boost::copy(rng, out_it)```, ```boost::accumulate(rng, state)```, etc. It provides a suite of generic functions that operate immediately on range objects rather than requiring pairs of iterators. The library organizes algorithms into several headers based on their functionality:
+This layer consists of around 70+ algorithm wrappers to STL equivalents using Layer 2 functions, defined in ```<boost/range/algorithm.hpp>```, e.g., ```boost::for_each(rng, f)```, ```boost::copy(rng, out_it)```, ```boost::accumulate(rng, state)```, etc. It provides a suite of generic functions that operate directly on ranges and views rather than requiring pairs of iterators. The library organizes algorithms into several headers based on their functionality:
 * Standard Library Counterparts: Includes versions of nearly all STL algorithms, such as ```boost::find```, ```boost::copy```, ```boost::sort```, and ```boost::for_each```. These are found in ```<boost/range/algorithm.hpp>```.
 * Numerical Algorithms: Range-based versions of ```<numeric>``` functions like ```boost::accumulate``` and ```boost::inner_product```, located in ```<boost/range/numeric.hpp>```.
 * Extended Algorithms: Additional utilities not found in the standard library, such as ```boost::push_back``` (adds a range to a container) and ```boost::remove_erase``` (removes elements and shrinks the container in one step). These are typically found in ```<boost/range/algorithm_ext.hpp>```.
