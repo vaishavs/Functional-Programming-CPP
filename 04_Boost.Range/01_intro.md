@@ -145,12 +145,12 @@ Boost.Range contains several utility classes, some of which are:
 #### Layer 4: The Free-Standing Functions Layer (universal lazy adaptors)
 This layer is universal dispatch layer over concepts: ```boost::begin(rng)```, ```boost::end(rng)```, ```boost::size(rng)``` etc. This layer acts as a bridge between high-level algorithms (like ```boost::find``` or ```boost::for_each```) and low-level data structures (like standard containers, raw arrays, or ```std::pair``` of iterators) to create a consistent, uniform interface for diverse container types. It consists of a set of functions that provide uniform access to any range, working around the inconsistencies of different types. There is a layer of indirection in these functions that hides the differences in the underlying containers. This results in code being written just once, in terms of ranges, and it works across all different sequence types. In other words, the same algorithm that sorts a vector will sort an array or any other container. The same adaptor that filters a list will filter a custom container. The abstraction hides the differences between these types behind a common interface.
 
-The dispatch is handled via template metaprogramming, meaning there is zero runtime overhead. It selects the best-performing implementation based on iterator capabilities. Without this layer, you would need different code to sort a vector vs. sorting a raw array. The dispatch layer allows this:
+The dispatch is handled via template metaprogramming, meaning there is zero runtime overhead. It selects the best-performing implementation based on iterator capabilities. Without this layer, different code would be needed to sort a vector vs. sorting a raw array. The dispatch layer allows this:
 ```
 // Works for vector, array, list, etc.
 boost::sort(my_range); 
 ```
-Adaptors are **lazy** range transformers. They do *not* store transformed data.
+Adaptors are **lazy** range transformers. They do *not* store or transform data. They only create lazy views over ranges.
 
 The dispatch layer calls ```boost::begin(my_range)``` and ```boost::end(my_range)```, which are internally overloaded to handle different types, dispatching to the correct implementation.
 * ```boost::size(rng)```: For forward+ ranges; $O(1)$ where possible (e.g., vec.size()), else distance.
@@ -179,7 +179,7 @@ auto result = v
 for (int x : result) std::cout << x << " ";
 ```
 #### Layer 5: Range algorithms
-This layer consists of around 70+ algorithm wrappers to STL equivalents using Layer 2 functions, defined in ```<boost/range/algorithm.hpp>```, e.g., ```boost::for_each(rng, f)```, ```boost::copy(rng, out_it)```, ```boost::accumulate(rng, state)```, etc. It provides a suite of generic functions that operate directly and **eagerly** on range objects rather than requiring pairs of iterators. The library organizes algorithms into several headers based on their functionality:
+This layer consists of around 70+ algorithm wrappers to STL equivalents using Layer 2 functions, defined in ```<boost/range/algorithm.hpp>```, e.g., ```boost::for_each(rng, f)```, ```boost::copy(rng, out_it)```, ```boost::accumulate(rng, state)```, etc. It provides a suite of generic functions that operate immediately on range objects rather than requiring pairs of iterators. The library organizes algorithms into several headers based on their functionality:
 * Standard Library Counterparts: Includes versions of nearly all STL algorithms, such as ```boost::find```, ```boost::copy```, ```boost::sort```, and ```boost::for_each```. These are found in ```<boost/range/algorithm.hpp>```.
 * Numerical Algorithms: Range-based versions of ```<numeric>``` functions like ```boost::accumulate``` and ```boost::inner_product```, located in ```<boost/range/numeric.hpp>```.
 * Extended Algorithms: Additional utilities not found in the standard library, such as ```boost::push_back``` (adds a range to a container) and ```boost::remove_erase``` (removes elements and shrinks the container in one step). These are typically found in ```<boost/range/algorithm_ext.hpp>```.
@@ -220,8 +220,7 @@ In this example:
 
 The right side of operator `|` defines an "adaptor holder" type that captures the adaptor's parameters (the predicate, the function, the stride, etc.) but has not yet been bound to a specific range. In the above example, in `v | filtered(pred)`, the `operator |` overload for the range type and the filtered holder is invoked, producing a new range type that wraps `v` with a filter iterator, so it can be piped through another adaptor.
 
-Each layer has independent headers. Including one does not drag in the others. For example, if only `<boost/range/algorithm.hpp>` is included, algorithms on raw containers are obtained — no adaptor overhead. If `<boost/range/adaptors.hpp>` is added, then the lazy pipeline machinery is obtained.
-
+The headers in each layer are independent, i.e., including one header does not drag in the others. For example, if only `<boost/range/algorithm.hpp>` is included, algorithms on raw containers are included — no adaptor overhead. If `<boost/range/adaptors.hpp>` is added, then the lazy pipeline machinery is included.
 ```
 // Only Layer 2 — zero adaptor or algorithm overhead
 #include <boost/range/begin.hpp>
@@ -230,7 +229,7 @@ Each layer has independent headers. Including one does not drag in the others. F
 // Only Layer 5 — algorithms on raw containers, no adaptors
 #include <boost/range/algorithm.hpp>
 
-// Only Layer 4 — adaptors, but no algorithms needed
+// Only Layer 4 — adaptors, but no algorithms
 #include <boost/range/adaptors.hpp>
 
 // Everything
@@ -238,8 +237,6 @@ Each layer has independent headers. Including one does not drag in the others. F
 #include <boost/range/adaptors.hpp>
 
 ```
-
-Also, algorithms no longer depend directly on specific container types or iterator details. They operate on the abstract concept of a range, leading to more generic and reusable code.
 
 The layering ensures an that an unsupported operation on a range is not performed. Concept mismatches are caught by the compiler, not at runtime. The error appears at the algorithm call site with a clear message about traversal category, not deep inside an algorithm implementation. Bugs in algorithms can often be fixed without touching adaptors.
 
