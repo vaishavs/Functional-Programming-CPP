@@ -324,7 +324,7 @@ Adaptors like filtered change the **perceived** size of the range, but they do n
 **The Pitfall:** Writing code that assumes `boost::size(my_range)` is cheap inside a loop. This can accidentally turn an $O(N)$ algorithm into an $O(N^2)$ disaster.  
   
 #### 5. Type Erasure Overhead with `any_range`  
-Sometimes it is necessary to hide the complex template type of a range (e.g., when returning a range from a virtual function). Boost provides `any_range` for this purpose. However, `any_range` uses **Type Erasure** (similar to `std::function`), which involves virtual function calls for every increment and dereference.  
+Sometimes it is necessary to hide the complex template type of a range (e.g., when returning a range from a virtual function). Boost provides `any_range` for this purpose. However, `any_range` uses **type erasure** (similar to `std::function`), which involves virtual function calls for every increment and dereference.  
 **The Pitfall:** Using `any_range` in high-frequency, performance-critical inner loops. The overhead of virtual calls can be 10x slower than a direct template-based range.  
   
 ### Summary Table: Pitfall vs. Solution  
