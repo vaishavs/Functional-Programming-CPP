@@ -335,9 +335,10 @@ Sometimes it is necessary to hide the complex template type of a range (e.g., wh
 | Re-evaluating Logic | High CPU usage | Materialize into a vector if used twice. |
 | Iterator Invalidation | Undefined Behavior | Don't resize the source while using a view. |
 | Hidden Complexity | $O(N^2)$ performance | Avoid size() on filtered ranges. |
-| any_range Usage | Slow execution | Use only at API boundaries, not tight loops. |
+| `any_range` Usage | Slow execution | Use only at API boundaries, not tight loops. |
   
   
-Source: 
-[Boost.Range Documentation](http://boost.cowic.de/rc/pdf/boost_range.pdf)
-[Boost.Range](https://theboostcpplibraries.com/boost.range)
+Sources: 
+* [Boost.Range Official](https://www.boost.org/doc/libs/latest/libs/range/doc/html/index.html)
+* [Boost.Range Documentation](http://boost.cowic.de/rc/pdf/boost_range.pdf)
+* [Boost.Range](https://theboostcpplibraries.com/boost.range)
