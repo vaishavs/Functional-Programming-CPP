@@ -1,9 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <iterator>
 
-#include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/begin.hpp>
@@ -18,79 +16,7 @@ struct Log {
 };
 
 // =========================
-// 2. Iterator
-// =========================
-template <typename Iter>
-class RedactIterator
-    : public boost::iterator_facade<
-          RedactIterator<Iter>,
-          typename std::iterator_traits<Iter>::value_type,
-          boost::random_access_traversal_tag,   // changed
-          typename std::iterator_traits<Iter>::reference,
-          typename std::iterator_traits<Iter>::difference_type
-      >
-{
-public:
-    RedactIterator() = default;
-    explicit RedactIterator(Iter it) : current(it) {}
-
-private:
-    friend class boost::iterator_core_access;
-
-    // increment
-    void increment() { ++current; }
-
-    // decrement
-    void decrement() { --current; }
-
-    // advance
-    void advance(typename std::iterator_traits<Iter>::difference_type n) {
-        current += n;
-    }
-
-    // distance_to
-    typename std::iterator_traits<Iter>::difference_type
-    distance_to(const RedactIterator& other) const {
-        return other.current - current;
-    }
-
-    // equality
-    bool equal(const RedactIterator& other) const {
-        return current == other.current;
-    }
-
-    // dereference
-    typename std::iterator_traits<Iter>::reference
-    dereference() const {
-        return *current;
-    }
-
-    Iter current;
-};
-
-// =========================
-// 3. Range
-// =========================
-template <typename Container>
-class RedactRange {
-public:
-    using iterator = RedactIterator<typename Container::iterator>;
-    using const_iterator = RedactIterator<typename Container::const_iterator>;
-
-    explicit RedactRange(Container& c) : container(c) {}
-
-    iterator begin() { return iterator(container.begin()); }
-    iterator end()   { return iterator(container.end()); }
-
-    const_iterator begin() const { return const_iterator(container.begin()); }
-    const_iterator end()   const { return const_iterator(container.end()); }
-
-private:
-    Container& container;
-};
-
-// =========================
-// 4. Adaptor
+// 2. Adaptor
 // =========================
 struct only_errors_holder {};
 
@@ -106,7 +32,7 @@ only_errors_holder only_errors() {
 }
 
 // =========================
-// 5. Algorithm
+// 3. Algorithm
 // =========================
 template <typename Range, typename Predicate>
 int count_if_range(const Range& r, Predicate pred) {
@@ -120,7 +46,7 @@ int count_if_range(const Range& r, Predicate pred) {
 }
 
 // =========================
-// 6. MAIN
+// 4. MAIN
 // =========================
 int main() {
     std::vector<Log> logs = {
@@ -131,10 +57,9 @@ int main() {
         {"INFO", "Recovered"}
     };
 
-    RedactRange<std::vector<Log>> range(logs);
-
+    // Directly use vector (already random access)
     auto processed =
-        range
+        logs
         | only_errors()
         | boost::adaptors::transformed([](const Log& log) {
               return log.message;
@@ -146,7 +71,7 @@ int main() {
     }
 
     int count = count_if_range(
-        range | only_errors(),
+        logs | only_errors(),
         [](const Log&) { return true; }
     );
 
