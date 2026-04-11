@@ -37,6 +37,14 @@ This repo contains explanation and examples about functional programming in C++.
 
    iv) Exercises
 6. Introduction to Boost.Range Library
+
+   i) Introduction
+
+   ii) Extending the Boost.Range library
+
+   iii) Examples
+
+   iv) Exercises
 7. Functional Programming Techniques in C++
 8. Advanced Functional Programming Techniques
 
