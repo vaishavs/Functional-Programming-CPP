@@ -1,52 +1,99 @@
-/* Extending Boost.Range for UDT */
+/* Custom data structure as a Boost.Range, with a custom adaptor and a custom algorithm */
 #include <iostream>
 #include <vector>
 #include <string>
 
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
 
+// =========================
+// 1. Data Model (Log AS RANGE)
+// =========================
 struct Log {
     std::string level;
     std::string message;
+
+    // Make Log behave like a range over its message
+    auto begin() { return message.begin(); }
+    auto end()   { return message.end(); }
+
+    auto begin() const { return message.begin(); }
+    auto end()   const { return message.end(); }
 };
 
-class LogStore {
-    std::vector<Log> logs;
-
-public:
-    using iterator = std::vector<Log>::iterator;
-    using const_iterator = std::vector<Log>::const_iterator;
-
-    LogStore() {
-        logs = {
-            {"INFO", "Startup"},
-            {"ERROR", "Disk failure"},
-            {"INFO", "Running"},
-            {"ERROR", "Crash"}
-        };
+// =========================
+// 2. Adaptor
+// =========================
+struct only_errors_fn {
+    template <typename Range>
+    auto operator()(Range&& r) const {
+        return std::forward<Range>(r)
+            | boost::adaptors::filtered([](const Log& log) {
+                  return log.level == "ERROR";
+              });
     }
-
-    iterator begin() { return logs.begin(); }
-    iterator end()   { return logs.end(); }
-
-    const_iterator begin() const { return logs.begin(); }
-    const_iterator end() const   { return logs.end(); }
 };
 
+template <typename Range>
+auto operator|(Range&& r, const only_errors_fn& fn) {
+    return fn(std::forward<Range>(r));
+}
+
+constexpr only_errors_fn only_errors{};
+
+// =========================
+// 3. Algorithm
+// =========================
+template <typename Range, typename Predicate>
+int count_if_range(const Range& r, Predicate pred) {
+    int count = 0;
+    for (auto it = boost::begin(r); it != boost::end(r); ++it) {
+        if (pred(*it)) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+// =========================
+// 4. MAIN
+// =========================
 int main() {
-    LogStore store;
+    std::vector<Log> logs = {
+        {"INFO", "System started"},
+        {"ERROR", "Disk failure"},
+        {"WARNING", "Low memory"},
+        {"ERROR", "Crash detected"},
+        {"INFO", "Recovered"}
+    };
 
-    auto errors =
-        store
-        | boost::adaptors::filtered([](const Log& l) {
-            return l.level == "ERROR";
-        })
-        | boost::adaptors::transformed([](const Log& l) {
-            return l.message;
-        });
+    // Pipeline still works
+    auto processed =
+        logs
+        | only_errors
+        | boost::adaptors::transformed([](const Log& log) {
+              return log.message;
+          });
 
-    for (const auto& msg : errors) {
+    std::cout << "Error messages:\n";
+    for (const auto& msg : processed) {
         std::cout << msg << std::endl;
     }
+
+    // Demonstrating Log as a range
+    std::cout << "\nCharacters of first ERROR log:\n";
+    for (const auto& ch : *(boost::begin(logs | only_errors))) {
+        std::cout << ch << ' ';
+    }
+
+    int count = count_if_range(
+        logs | only_errors,
+        [](const Log&) { return true; }
+    );
+
+    std::cout << "\n\nTotal ERROR logs: " << count << std::endl;
+
+    return 0;
 }
