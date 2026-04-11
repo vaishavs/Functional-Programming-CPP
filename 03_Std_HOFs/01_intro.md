@@ -292,19 +292,6 @@ The compiler can:
 * Recognize that ```m_pred``` and ```m_fn``` are simple functions and keep them inline.
 * Collapse the whole chain into a tight loop with no extra allocation per ```|```.
 
-### When to use views vs containers
-Use views when:
-* You want zero‑copy pipelines over large or read‑only data.
-* The underlying data is stable and long‑lived.
-* The transformations are cheap (simple arithmetic, light lambdas).
-* You iterate once or a few times.
-
-Use containers when:
-* You need persistent storage of the result.
-* You iterate many times over the same data.
-* The transform/filter is expensive (e.g., calls a heavy function or I/O).
-* The data source is ephemeral or you cannot guarantee lifetime.
-
 This keeps the pipeline design lazy and composable, while giving you owned storage where needed.
 
 
