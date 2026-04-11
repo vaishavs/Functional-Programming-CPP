@@ -25,7 +25,7 @@ class RedactIterator
     : public boost::iterator_facade<
           RedactIterator<Iter>,
           typename std::iterator_traits<Iter>::value_type,
-          boost::forward_traversal_tag,
+          boost::random_access_traversal_tag,   // changed
           typename std::iterator_traits<Iter>::reference,
           typename std::iterator_traits<Iter>::difference_type
       >
@@ -37,12 +37,29 @@ public:
 private:
     friend class boost::iterator_core_access;
 
+    // increment
     void increment() { ++current; }
 
+    // decrement
+    void decrement() { --current; }
+
+    // advance
+    void advance(typename std::iterator_traits<Iter>::difference_type n) {
+        current += n;
+    }
+
+    // distance_to
+    typename std::iterator_traits<Iter>::difference_type
+    distance_to(const RedactIterator& other) const {
+        return other.current - current;
+    }
+
+    // equality
     bool equal(const RedactIterator& other) const {
         return current == other.current;
     }
 
+    // dereference
     typename std::iterator_traits<Iter>::reference
     dereference() const {
         return *current;
