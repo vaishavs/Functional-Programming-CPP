@@ -3,6 +3,7 @@
 #include <string>
 #include <iterator>
 
+#include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/begin.hpp>
@@ -17,57 +18,41 @@ struct Log {
 };
 
 // =========================
-// 2. Custom Iterator
-// (wraps underlying iterator)
+// 2. Iterator
 // =========================
-#include <iterator>
-
 template <typename Iter>
-class RedactIterator {
+class RedactIterator
+    : public boost::iterator_facade<
+          RedactIterator<Iter>,
+          typename std::iterator_traits<Iter>::value_type,
+          boost::forward_traversal_tag,
+          typename std::iterator_traits<Iter>::reference,
+          typename std::iterator_traits<Iter>::difference_type
+      >
+{
 public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = typename std::iterator_traits<Iter>::value_type;
-    using difference_type = typename std::iterator_traits<Iter>::difference_type;
-
-    using reference = typename std::iterator_traits<Iter>::reference;
-    using pointer   = typename std::iterator_traits<Iter>::pointer;
-
     RedactIterator() = default;
     explicit RedactIterator(Iter it) : current(it) {}
 
-    reference operator*() const {
-        return *current;
-    }
+private:
+    friend class boost::iterator_core_access;
 
-    pointer operator->() const {
-        return current.operator->();
-    }
+    void increment() { ++current; }
 
-    RedactIterator& operator++() {
-        ++current;
-        return *this;
-    }
-
-    RedactIterator operator++(int) {
-        RedactIterator tmp = *this;
-        ++(*this);
-        return tmp;
-    }
-
-    bool operator==(const RedactIterator& other) const {
+    bool equal(const RedactIterator& other) const {
         return current == other.current;
     }
 
-    bool operator!=(const RedactIterator& other) const {
-        return !(*this == other);
+    typename std::iterator_traits<Iter>::reference
+    dereference() const {
+        return *current;
     }
 
-private:
     Iter current;
 };
 
 // =========================
-// 3. Custom Range
+// 3. Range
 // =========================
 template <typename Container>
 class RedactRange {
@@ -77,28 +62,18 @@ public:
 
     explicit RedactRange(Container& c) : container(c) {}
 
-    iterator begin() {
-        return iterator(container.begin());
-    }
+    iterator begin() { return iterator(container.begin()); }
+    iterator end()   { return iterator(container.end()); }
 
-    iterator end() {
-        return iterator(container.end());
-    }
-
-    const_iterator begin() const {
-        return const_iterator(container.begin());
-    }
-
-    const_iterator end() const {
-        return const_iterator(container.end());
-    }
+    const_iterator begin() const { return const_iterator(container.begin()); }
+    const_iterator end()   const { return const_iterator(container.end()); }
 
 private:
     Container& container;
 };
 
 // =========================
-// 4. Custom Adaptor
+// 4. Adaptor
 // =========================
 struct only_errors_holder {};
 
@@ -114,7 +89,7 @@ only_errors_holder only_errors() {
 }
 
 // =========================
-// 5. Custom Algorithm
+// 5. Algorithm
 // =========================
 template <typename Range, typename Predicate>
 int count_if_range(const Range& r, Predicate pred) {
@@ -128,7 +103,7 @@ int count_if_range(const Range& r, Predicate pred) {
 }
 
 // =========================
-// 6. MAIN PIPELINE
+// 6. MAIN
 // =========================
 int main() {
     std::vector<Log> logs = {
@@ -141,8 +116,6 @@ int main() {
 
     RedactRange<std::vector<Log>> range(logs);
 
-    // Pipeline:
-    // custom range → custom adaptor → boost transform
     auto processed =
         range
         | only_errors()
@@ -155,7 +128,6 @@ int main() {
         std::cout << msg << std::endl;
     }
 
-    // Custom algorithm on pipeline
     int count = count_if_range(
         range | only_errors(),
         [](const Log&) { return true; }
