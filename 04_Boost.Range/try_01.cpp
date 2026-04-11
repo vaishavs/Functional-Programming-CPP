@@ -10,6 +10,9 @@ The Requirements
 2.  Transform: Square each of those even numbers.
 3.  Reverse: Reverse the resulting sequence.
 4.  Output: Print the final sequence to the console.
+
+Expected output ->
+Processed Numbers: 100 64 36 16 4
 */
 
 #include <iostream>
