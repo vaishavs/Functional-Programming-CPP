@@ -247,7 +247,7 @@ The flow is as follows:
 
 For each element added to the vector, the following things happen:
 1. A dereference operator is called on the proxy iterator that belongs to the range view returned by take, i.e., ```take_view::iterator::operator*()```. The proxy iterator created by take passes the request to the proxy iterator created by `transform`.
-2. Which calls ```transform_view::iterator::operator*()```. This iterator transforms and passes on.
+2. Which calls ```transform_view::iterator::operator*()```. This iterator transforms and passes on the request.
 3. It calls ```filter_view::iterator::operator*()```. The proxy iterator defined by the filter transformation is dereferenced. It goes through the source collection and finds and returns the first person that satisfies the `is_female` predicate. This is the first time any of the persons in the collection are accessed, and the first time the `is_female` function is called.
 4. This iterator advances until predicate is satisfied. The person retrieved by dereferencing the `filter` proxy iterator is passed to the `name` function, and the result is returned to the `take` proxy iterator, which passes it on to be inserted into the `names` vector. When an element is inserted, it goes to the next one, and then the next one, until the end is reached. 
 5. It finally calls ```ref_view::iterator::operator*()```, which reads from the vector, and the final value flows back up through `transform`.
