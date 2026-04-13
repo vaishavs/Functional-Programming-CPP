@@ -250,7 +250,7 @@ For each element added to the vector, the following things happen:
 2. Which calls ```transform_view::iterator::operator*()```. This iterator just passes on the request.
 3. It calls ```filter_view::iterator::operator*()```. The proxy iterator defined by the `filter` transformation is dereferenced. It goes through the source collection and finds and returns the first person that satisfies the `is_female` predicate. This is the first time any of the persons in the collection are accessed, and the first time the `is_female` function is called.
 4. This iterator advances until predicate is satisfied. The person retrieved by dereferencing the `filter` proxy iterator is passed to the `name` function, and the result is returned to the `take` proxy iterator, which passes it on to be inserted into the `names` vector. When an element is inserted, it goes to the next one, and then the next one, until the end is reached. 
-5. It finally calls ```ref_view::iterator::operator*()```, which reads from the vector, and the final value flows back up through `transform`.
+5. It finally calls ```ref_view::iterator::operator*()```, which reads from the vector, where the final value flows back up through `transform`.
 
 This is lazy evaluation at work. Even though the code is shorter and more generic than the equivalent handwritten for loop, it does exactly the same thing and has no performance penalties. Each element of the underlying container is processed on demand, one at a time, with the full pipeline fused together. The compiler typically inlines everything into a tight loop.
 
