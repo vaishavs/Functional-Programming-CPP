@@ -222,15 +222,11 @@ std::vector<int> vec;
 // Works from C++23 and GCC v16 onwards
 auto result_vec = std::ranges::to<std::vector<int>>(vec);
 ```
-Let's take an example:
+Consider an example:
 ```
-std::vector<int> v = {-1, 2, -3, 4, 5, 6};
-auto pipeline = v
-    | std::views::filter([](int x) { return x > 0; }) // 2,4,5,6
-    | std::views::transform([](int x) { return x * x; }) // 4,16,25,36
-    | std::views::take(3);
-
-for (int x : pipeline) { /* 4, 16, 25 */ }
+std::vector<std::string> names = people | filter(is_female)
+| transform(name)
+| take(3);
 ```
 The type of `pipeline` is something like:
 ```
@@ -242,16 +238,21 @@ take_view
 ```
 This is a nested type — a compile-time description of the computation. No elements are touched. 
 
-The flow begins with ```*pipeline.begin()```, following which:
-1. ```take_view::iterator::operator*()``` is called
-2. Which calls ```transform_view::iterator::operator*()```
-3. It calls ```filter_view::iterator::operator*()```
-4. Which advances until predicate is satisfied
-5. Which calls ```ref_view::iterator::operator*()```
-6. Which reads from the vector
-7. The value flows back up through transform
+The flow is as follows:
+1. When `people | filter(is_female)` is evaluated, nothing happens other than a new view being created. Not a single person is accessed from the `people` collection, except potentially to initialize the iterator to the source collection to point to the first item that satisfies the `is_female` predicate.
+2. This view is passed to `| transform(name)`. The only thing that happens is that a new view is created. Again, neither a single person is accessed nor the `name` function is called on any of them.
+3. Then, `| take(3)` is applied to that result. Again, it creates a new view and nothing else.
+4. A vector of strings is constructed from the view which was obtained as the result of the `| take(3)` transformation. To create a vector, the values to put in must be known. This step goes through the view and accesses each of its elements. When the vector of names is to be constructed from the range, all the values in the range have to be evaluated. 
 
-Each element of the underlying container is processed on demand, one at a time, with the full pipeline fused together. The compiler typically inlines everything into a tight loop.
+
+For each element added to the vector, the following things happen:
+1. A dereference operator is called on the proxy iterator that belongs to the range view returned by take, i.e., ```take_view::iterator::operator*()```. The proxy iterator created by take passes the request to the proxy iterator created by `transform`.
+2. Which calls ```transform_view::iterator::operator*()```. This iterator transforms and passes on.
+3. It calls ```filter_view::iterator::operator*()```. The proxy iterator defined by the filter transformation is dereferenced. It goes through the source collection and finds and returns the first person that satisfies the `is_female` predicate. This is the first time any of the persons in the collection are accessed, and the first time the `is_female` function is called.
+4. This iterator advances until predicate is satisfied. The person retrieved by dereferencing the `filter` proxy iterator is passed to the `name` function, and the result is returned to the `take` proxy iterator, which passes it on to be inserted into the names vector. When an element is inserted, it goes to the next one, and then the next one, until the end is reached. 
+5. It finally calls ```ref_view::iterator::operator*()```, which reads from the vector, and the final value flows back up through `transform`.
+
+This is lazy evaluation at work. Even though the code is shorter and more generic than the equivalent handwritten for loop, it does exactly the same thing and has no performance penalties. Each element of the underlying container is processed on demand, one at a time, with the full pipeline fused together. The compiler typically inlines everything into a tight loop.
 
 From the address‑space perspective:
 * ```v``` owns a contiguous buffer: ```[-1, 2, -3, 4, 5, 6]```.
