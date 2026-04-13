@@ -247,16 +247,16 @@ The flow is as follows:
 
 For each element added to the vector, the following things happen:
 1. A dereference operator is called on the proxy iterator that belongs to the range view returned by take, i.e., ```take_view::iterator::operator*()```. The proxy iterator created by take passes the request to the proxy iterator created by `transform`.
-2. Which calls ```transform_view::iterator::operator*()```. This iterator transforms and passes on the request.
-3. It calls ```filter_view::iterator::operator*()```. The proxy iterator defined by the filter transformation is dereferenced. It goes through the source collection and finds and returns the first person that satisfies the `is_female` predicate. This is the first time any of the persons in the collection are accessed, and the first time the `is_female` function is called.
+2. Which calls ```transform_view::iterator::operator*()```. This iterator just passes on the request.
+3. It calls ```filter_view::iterator::operator*()```. The proxy iterator defined by the `filter` transformation is dereferenced. It goes through the source collection and finds and returns the first person that satisfies the `is_female` predicate. This is the first time any of the persons in the collection are accessed, and the first time the `is_female` function is called.
 4. This iterator advances until predicate is satisfied. The person retrieved by dereferencing the `filter` proxy iterator is passed to the `name` function, and the result is returned to the `take` proxy iterator, which passes it on to be inserted into the `names` vector. When an element is inserted, it goes to the next one, and then the next one, until the end is reached. 
 5. It finally calls ```ref_view::iterator::operator*()```, which reads from the vector, and the final value flows back up through `transform`.
 
 This is lazy evaluation at work. Even though the code is shorter and more generic than the equivalent handwritten for loop, it does exactly the same thing and has no performance penalties. Each element of the underlying container is processed on demand, one at a time, with the full pipeline fused together. The compiler typically inlines everything into a tight loop.
 
 From the address‑space perspective:
-* ```v``` owns a contiguous buffer: ```[-1, 2, -3, 4, 5, 6]```.
-* ```filter_view``` stores a pointer‑like view into this buffer (```m_base``` ≈ ```v.data()``` and ```v.size()```).
+* ```names``` owns a contiguous buffer.
+* ```filter_view``` stores a pointer‑like view into this buffer (```m_base``` ≈ ```names.data()``` and ```names.size()```).
 * ```transform_view``` stores only:
     * Another pointer‑like base iterator.
     * A small function‑object ```fn``` (likely just a ```size_t```‑sized lambda).
@@ -264,7 +264,7 @@ From the address‑space perspective:
     * A pointer‑like base iterator.
     * Two ```size_t```s: ```m_count```, ```m_max```.
 
-No extra storage is allocated for the intermediate sequence ```[2,4,5,6]``` or ```[4,16,25,36]```.
+No extra storage is allocated for the intermediate sequences.
 
 Instead, the machine code for
 ```
