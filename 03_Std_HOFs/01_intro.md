@@ -80,9 +80,9 @@ And they are refined by the iterator categories:
 * ```std::ranges::input_range``` → forward‑only, single‑pass.
 * ```std::ranges::forward_range``` → bidi‑capable, multiple passes.
 * ```std::ranges::bidirectional_range``` → can traverse backwards
-* ```std::ranges::random_access_range``` → O(1) random element access
+* ```std::ranges::random_access_range``` → $O(1)$ random element access
 * ```std::ranges::contiguous_range``` → elements are laid out contiguously in memory (enables pointer arithmetic)
-* ```std::ranges::sized_range``` → size() is available in O(1)
+* ```std::ranges::sized_range``` → `size()` is available in $O(1)$
 * ```std::ranges::common_range``` → ```begin(t)``` and ```end(t)``` return the same type (no separate sentinel).
 
 Each concept refines the previous one, progressively requiring more capabilities:
@@ -104,27 +104,9 @@ It can be said that:
 * All containers and container adaptors  are ranges
 * Non-owning or borrowed containers like ```std::string_view```, ```std::span```, etc., are borrowed ranges. A range is "borrowed" if iterating over it does not depend on the lifetime of the range object itself.
 
-The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is:
-* memory efficient - it does not copy of the elements of the container it works on
-* mutable - modifications to the underlying container are reflected in the view and vice-versa.
+The namespace alias ```std::views``` is provided as a shorthand for ```std::ranges::views```. A view is a lightweight range that works on a container without making internal data copies, unlike a range. A view provides a "window" into an existing range via reference semantics, i.e., it is memory efficient and mutable. In other words, it does not copy the elements of the container, and modifications to the underlying container are reflected in the view and vice-versa.
 
-A view must satisfy:
-```
-template<typename V>
-concept view = std::ranges::range<V>
-            && std::movable<V>
-            && std::ranges::enable_view<V>; // opt-in marker
-```
-And additionally, all these operations must be O(1):
-* Move construction
-* Move assignment
-* Destruction
-* Copy construction (if supported)
-* Copy assignment (if supported)
-This O(1) constraint is the essential rule: a view must **never** copy the underlying data. It only holds a reference/pointer/iterator to it.
-
-
-The view adapters are defined under ```std::views```, such as ```std::views::filter``` and ```std::views::transform``` for instance, and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
+The view adapters are defined under ```std::views```, such as ```std::views::filter```, ```std::views::transform```, etc., and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 Custom views can also be created by inheriting from ```std::ranges::view_interface```.
 ```
@@ -140,21 +122,40 @@ public:
 };
 ```
 
-Instead of calling algorithms separately and passing iterator pairs each time, we can now build operations in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
+A view must satisfy:
+```
+template<typename V>
+concept view = std::ranges::range<V>
+            && std::movable<V>
+            && std::ranges::enable_view<V>; // opt-in marker
+```
+And additionally, all these operations must be $O(1)$:
+* Move construction
+* Move assignment
+* Destruction
+* Copy construction (if supported)
+* Copy assignment (if supported)
+This $O(1)$ constraint is the essential rule: a view must **never** copy the underlying data. It only holds a reference/pointer/iterator to it.
+
+Instead of calling algorithms separately and passing iterator pairs each time, operations can now be built in a pipeline style, similar to how data flows through stages. This is called as a "pipeable" workflow.
 
 The general pattern looks like this:
 ```
 Data | View_Adapter | Action
 ```
-* Data → The original source of elements (for example, a std::vector of users).
-* View Adapter → A transformation or filtering step that describes how the data should be processed.
+* Data → The original source of elements (for example, a `std::vector` of users).
+* View Adapter → Describes how the data should be processed.
 * Action → The final step where the result is actually consumed (for example, printing or storing values).
 
-The pipe operator ```|``` is used to chain range adaptors. It was chosen deliberately to evoke the Unix pipeline metaphor, where data flows through a series of transformations, each receiving the output of the previous one. The semantic contract of the pipe operator is that the right-hand side is always applied to the left-hand side, producing a new range without modifying the original. The new range is a lazy view — it wraps the original rather than copying it. This means that the lifetime of the original range must exceed the lifetime of the view. 
+The pipe operator ```|``` is used to chain range adaptors. It was chosen deliberately to evoke the Unix pipeline metaphor, where data flows through a series of transformations, each receiving the output of the previous one. The semantic contract of the pipe operator is that the right-hand side is always applied to the left-hand side, producing a new range without modifying the original. This is done using *proxy iterators*.
 
-Chaining pipes creates a tree of wrapper objects rooted at the original range. Each layer adds a small constant amount of overhead per element access. The C++ optimizer can typically inline through all these layers and produce machine code that is nearly as efficient as a hand-written loop with all the logic inlined, particularly with modern compilers and optimization levels. 
+The first adaptor in the pipeline returns a range structure whose begin iterator will be a smart proxy iterator that points to the first element in the source collection that satisfies the given predicate. And the end iterator will be a proxy for the original collection’s end iterator. The only thing the proxy iterator needs to do differently than the iterator from the original collection is to point only at the elements that satisfy the given predicate.
 
-It must be kept in mind that the full type of a deeply composed pipeline can be extraordinarily long and complex. If a compilation error is generated in a pipeline expression, the error message will typically dump this full nested type, which can be hundreds or thousands of characters long. Learning to read these errors requires practice and a clear mental model of which adaptor corresponds to which layer. Working from the inside out makes these errors tractable. The ```auto``` keyword is essential when working with adapted ranges precisely because the types are so complex and unwriteable by hand. The ```auto``` deduced type will be the full nested (hidden) type, which is correct and efficient.
+In a nutshell, every time the proxy iterator is incremented, it needs to find the next element in the original collection that satisfies the predicate. With the proxy iterator, a new temporary collection need not be created. Only a new 'view' of the existing data is created. This new range is a lazy view — it wraps the original rather than copying it. This view, instead of showing original elements as they are, shows them processed. The next adaptor in the pipeline sees only this view.
+
+Chaining pipes creates a tree of wrapper objects rooted at the original range. Each layer adds a small constant amount of overhead per element access. The C++ optimizer can typically inline through all these layers and produce machine code that is nearly as efficient as a hand-written loop with all the logic inlined, particularly with modern compilers and optimization levels.
+
+It must be kept in mind that the full type of a deeply composed pipeline can be extraordinarily long and complex. If a compilation error is generated in a pipeline expression, the error message will typically dump this full nested type, which can be hundreds or thousands of characters long. Learning to read these errors requires practice and a clear mental model of which adaptor corresponds to which layer. Working from the inside out makes these errors tractable. The ```auto``` keyword is essential when working with adapted ranges precisely because the types are so complex and unwriteable by hand. The ```auto``` deduced type will be the full nested (hidden) type, which is correct and efficient. Also, the lifetime of the original range must exceed the lifetime of the view.
 
 Consider a traditional STL example:
 ```
@@ -300,3 +301,4 @@ Sources:
 * https://www.youtube.com/watch?v=Rbl3h0RJuuY
 * https://www.youtube.com/watch?v=Q434UHWRzI0
 * https://www.youtube.com/watch?v=5iXUCcFP6H4
+* Functional Programming in C++ by Ivan Cukic
