@@ -180,6 +180,11 @@ inline detail::find_last_forwarder<T> find_last(T val)
 }
 ```
 
+Then, it could be used in a pipeline:
+```
+auto it = numbers | find_last(2);
+```
+
 
 Sources:
 * [Extending Boost.Range](https://www.boost.org/doc/libs/latest/libs/range/doc/html/range/reference/extending.html)
