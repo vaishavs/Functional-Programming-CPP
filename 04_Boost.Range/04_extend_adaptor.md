@@ -1,5 +1,12 @@
 # Extending an adaptor
 Internally, a Boost.Range adaptor is constructed by combining a custom iterator, a range that wraps those iterators, and a pipe operator `|`, which allows the `range | adaptor` syntax to be utilized.
+
+The full machinery involves:
+* holder types
+* pipe operator overloading
+* adapted iterator
+* range concept compliance.
+
 To illustrate this process, let us take a custom adaptor named `add_value` that takes a range of numbers and adds a specific constant to each element lazily as the range is traversed.
 
 #### Step 1: Defining the Underlying Iterator
@@ -41,7 +48,7 @@ private:
 ```
 Note: The fifth template parameter for `iterator_adaptor` is set to `ValueType` rather than `ValueType&`. Because a new value is calculated on the fly `(*base + val)`, it must be returned by value.
 
-#### Step 2: The Adaptor "Holder" (The Tag) is Created
+#### Step 2: Creating the Adaptor "Holder" (The Tag)
 When the expression `rng | add_value(5)` is processed, `add_value(5)` is evaluated first. A temporary object is returned to hold the state (the number 5) until it can be bound to the range by the pipe operator.
 ```
 // The holder struct
@@ -125,6 +132,101 @@ int main() {
 }
 ```
 
+The full implementation looks like this:
+```
+#include <iostream>
+#include <vector>
+#include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/range/iterator_range.hpp>
+
+// ==========================================================
+// 1. THE ITERATOR
+// ==========================================================
+template <typename Iterator, typename Value>
+class scaled_iterator
+    : public boost::iterator_adaptor<
+        scaled_iterator<Iterator, Value>, // Derived (The CRTP part)
+        Iterator,                         // Base iterator
+        Value,                            // Value type
+        boost::use_default,               // Category
+        Value                             // Reference (Return by value for math)
+      >
+{
+public:
+    // Default constructor
+    scaled_iterator() : scaled_iterator::iterator_adaptor_(), m_scale(1) {}
+
+    // Constructor with base iterator and scale factor
+    scaled_iterator(Iterator it, Value scale)
+        : scaled_iterator::iterator_adaptor_(it), m_scale(scale) {}
+
+private:
+    friend class boost::iterator_core_access;
+
+    // The logic that resolves the "expected class-name" issue 
+    // by being correctly nested in the class body.
+    Value dereference() const {
+        return (*this->base()) * m_scale;
+    }
+
+    Value m_scale;
+};
+
+// ==========================================================
+// 2. THE ADAPTOR TAG & PIPE OPERATOR
+// ==========================================================
+template <typename Value>
+struct scale_holder {
+    Value scale;
+    scale_holder(Value v) : scale(v) {}
+};
+
+// Generator function
+template <typename Value>
+scale_holder<Value> scaled_by(Value v) {
+    return scale_holder<Value>(v);
+}
+
+// Pipe operator for ranges
+template <typename Range, typename Value>
+auto operator|(Range& rng, const scale_holder<Value>& holder) {
+    using iter_t = typename boost::range_iterator<Range>::type;
+    using custom_iter_t = scaled_iterator<iter_t, Value>;
+
+    return boost::make_iterator_range(
+        custom_iter_t(boost::begin(rng), holder.scale),
+        custom_iter_t(boost::end(rng), holder.scale)
+    );
+}
+
+// Pipe operator for const/r-value ranges
+template <typename Range, typename Value>
+auto operator|(const Range& rng, const scale_holder<Value>& holder) {
+    using iter_t = typename boost::range_iterator<const Range>::type;
+    using custom_iter_t = scaled_iterator<iter_t, Value>;
+
+    return boost::make_iterator_range(
+        custom_iter_t(boost::begin(rng), holder.scale),
+        custom_iter_t(boost::end(rng), holder.scale)
+    );
+}
+
+// ==========================================================
+// 3. USAGE
+// ==========================================================
+int main() {
+    std::vector<int> data = {1, 2, 3, 4, 5};
+
+    // Using the "scaled_by" adaptor
+    auto result = data | scaled_by(10);
+
+    for (int val : result) {
+        std::cout << val << " "; // Output: 10 20 30 40 50
+    }
+
+    return 0;
+}
+```
 
 Sources:
 * [Extending Boost.Range](https://www.boost.org/doc/libs/latest/libs/range/doc/html/range/reference/extending.html)
