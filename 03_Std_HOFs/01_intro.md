@@ -225,10 +225,10 @@ auto result_vec = std::ranges::to<std::vector<int>>(vec);
 Consider an example:
 ```
 std::vector<std::string> names = people | filter(is_female)
-| transform(name)
-| take(3);
+                                        | transform(name)
+                                        | take(3);
 ```
-The type of `pipeline` is something like:
+The type of `names` is something like:
 ```
 take_view
   → transform_view
@@ -244,6 +244,9 @@ The flow is as follows:
 3. Then, `| take(3)` is applied to that result. Again, it creates a new view and nothing else.
 4. A vector of strings is constructed from the view which was obtained as the result of the `| take(3)` transformation. To create a vector, the values to put in must be known. This step goes through the view and accesses each of its elements. When the vector of names is to be constructed from the range, all the values in the range have to be evaluated. 
 
+[![Screenshot-2026-04-14-at-7-51-49-AM.png](https://i.postimg.cc/pXY0yMb2/Screenshot-2026-04-14-at-7-51-49-AM.png)](https://postimg.cc/9r0PNSQS)
+When accessing an element from the view, the view proxies the request to the next view in the composite transformation, or to the collection. Depending on the type of the view, it may
+transform the result, skip elements, traverse them in a different order, and so on.
 
 For each element added to the vector, the following things happen:
 1. A dereference operator is called on the proxy iterator that belongs to the range view returned by take, i.e., ```take_view::iterator::operator*()```. The proxy iterator created by take passes the request to the proxy iterator created by `transform`.
@@ -282,17 +285,10 @@ for (auto it = v.begin(); it != v.end() && count < 3; ++it) {
 ```
 The compiler inlines ```filter_view::iterator::operator++()``` and ```transform_view::iterator::operator*()``` across the adaptor boundaries, so the indirection cost is very low.
 
-Even though the model is deep,
-```
-take_view
-  → transform_view
-     → filter_view
-        → std::vector
-```
-The compiler can:
-* Inline ```operator*()``` and ```operator++()``` through the layers.
-* Recognize that ```m_pred``` and ```m_fn``` are simple functions and keep them inline.
-* Collapse the whole chain into a tight loop with no extra allocation per ```|```.
+Even though the model is deep, the compiler:
+* inlines ```operator*()``` and ```operator++()``` through the layers.
+* recognize that ```m_pred``` and ```m_fn``` are simple functions and keep them inline.
+* collapses the whole chain into a tight loop with no extra allocation per ```|```.
 
 This keeps the pipeline design lazy and composable, while giving you owned storage where needed.
 
