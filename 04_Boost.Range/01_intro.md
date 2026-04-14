@@ -15,7 +15,7 @@ int arr[] = {1,2,3};
 boost::for_each(arr, ...); // (no .data() needed)
 ```
 
-Boost.Range was so successful and well-loved that the C++ standards committee later adopted these concepts into C++20 as ```std::ranges``` (see [01_intro.md](https://github.com/vaishavs/Functional-Programming-/blob/main/03_Std_HOFs/01_intro.md)). Using a modern compiler (C++20 or newer), almost the exact same code can be written using the standard library (```#include <ranges>```) instead of Boost:
+Boost.Range was so successful and well-loved that the C++ standards committee later adopted these concepts into C++20 as ```std::ranges``` (see [01_intro.md](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/03_Std_HOFs/01_intro.md)). Using a modern compiler (C++20 or newer), almost the exact same code can be written using the standard library (```#include <ranges>```) instead of Boost:
 ```
 // C++20 Standard Library Equivalent
 auto std_view = numbers | std::views::filter(is_even) 
