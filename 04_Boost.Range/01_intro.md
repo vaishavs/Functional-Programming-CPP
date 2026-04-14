@@ -46,7 +46,11 @@ Boost.Range relies heavily on concepts. A concept, in the sense used by Boost.Ra
 
 A type is said to model a concept if and only if it satisfies all of the concept's syntactic and semantic requirements.
 
-Boost.Range provides compile-time concept-checking classes in ```<boost/range/concepts.hpp>```. If the concept fails, it produces undefined behavior at best and silently wrong results at worst. The ```BOOST_CONCEPT_ASSERT``` macro is the primary tool for producing early, meaningful errors rather than late, cryptic ones. The macro requires double parentheses to work correctly, such as `BOOST_CONCEPT_ASSERT((ConceptName<Type>))`. When a concept assertion is added at the beginning of a function template, the compiler checks the concept requirements immediately when it instantiates the function. If the requirements are not satisfied, an error pointing at the assertion is produced, with a clear message about which concept was violated. Without the assertion, the compiler would proceed into the function body, fail on some specific expression deep inside, and report an error that refers to implementation details rather than the interface contract.
+Boost.Range provides compile-time concept-checking classes in ```<boost/range/concepts.hpp>```. If the concept fails, it produces undefined behavior at best and silently wrong results at worst. The ```BOOST_CONCEPT_ASSERT``` macro is the primary tool for producing early, meaningful errors rather than late, cryptic ones. The macro requires double parentheses to work correctly.
+
+`BOOST_CONCEPT_ASSERT((ConceptName<Type>))`.
+
+When a concept assertion is added at the beginning of a function template, the compiler checks the concept requirements immediately when it instantiates the function. If the requirements are not satisfied, an error pointing at the assertion is produced, with a clear message about which concept was violated. Without the assertion, the compiler would proceed into the function body, fail on some specific expression deep inside, and report an error that refers to implementation details rather than the interface contract.
 
 ## Levels of abstraction in Boost.Range
 Even though the documentation does not advertise Boost.Range as a layered architecture, its design naturally forms layers of components in a conceptual sense, with increasing levels of abstraction from raw iterators up to generic range‑based algorithms and adaptors.
@@ -87,7 +91,7 @@ auto r = c | boost::adaptors::reversed;
 #### Layer 2: Core Concepts and Traits
 This layer consists of traits and iterators. It provides the fundamental definitions and metadata required to treat any sequence as a range. This layer defines what a range is (concepts) and how to extract information about its types (traits), allowing the library to "inspect" a range at compile-time.
 * Traits: ```boost::range_iterator<Rng>::type```, ```range_value<Rng>::type / range_reference::type<Rng>```, ```range_category<Rng>::type```, etc., to deduce types at compile-time. These metafunctions serve an analogous role to `std::iterator_traits` in the STL.
-* Requirements: ```size()```, ```begin(rng)/end(rng)```, ```rbegin()/rend()``` to validate ```[first, last)```.
+* Requirements: ```size()```, ```begin(rng)```/```end(rng)```, ```rbegin()```/```rend()``` to validate ```[first, last)```.
 
 #### Layer 3: Utility helpers
 These classes provide the infrastructure to turn raw pointers, iterator pairs, or custom data structures into first-class ranges. They act as the primary "glue" when a range other than a standard container needs to be  stored, returned, or passed. They are small but powerful building blocks that support the layered design. They don’t usually perform algorithms themselves—instead, they enable ranges to exist, adapt, and interoperate cleanly. They expose a complete range interface to the adaptor and algorithm layers above.
@@ -154,7 +158,7 @@ Adaptors are **lazy** range transformers. They do *not* store or transform data.
 
 The dispatch layer calls ```boost::begin(my_range)``` and ```boost::end(my_range)```, which are internally overloaded to handle different types, dispatching to the correct implementation.
 * ```boost::size(rng)```: For forward+ ranges; $O(1)$ where possible (e.g., vec.size()), else distance.
-* ```boost::empty(rng)```: `size()`==0 or `begin()`==`end()`.
+* ```boost::empty(rng)```: `size()==0` or `begin()`==`end()`.
 * ```boost::distance(rng)```: Forward traversal count.
 * ```boost::advance(rng, n)``` / ```boost::prior(rng)```: Iterator movement, category-aware.
 
