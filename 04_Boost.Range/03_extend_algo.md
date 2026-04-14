@@ -96,7 +96,7 @@ int main() {
 ```
 The decoupling of code from specific data structures is ensured by this tiered approach, while the full optimization benefits of the Boost.Range iterator abstractions are gained.
 
-The complete code looks like this:
+The complete implementation looks like this:
 ```
 #include <iostream>
 #include <vector>
