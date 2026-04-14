@@ -1,11 +1,15 @@
 # Functional Programming in C++
-This repo contains explanation and examples about functional programming in C++. The explanations are listed in .md files, and exercises are included in .cpp files to try out in the latest compiler. Sources that have been referred to, if any, are listed at the end of .md files. Most of the content is based on [Functional Programming in C++](https://codesignal.com/learn/paths/functional-programming-in-cpp). It is highly recommended to take up this free course for hands-on practice. For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwi82-b_pfmSAxWnhIkEHacPIkIQFnoECAwQAQ&url=https%3A%2F%2Fgithub.com%2Fgraninas%2Fcpp_functional_programming&usg=AOvVaw1a2HCdNLW9sArKzR4kY3Uo&opi=89978449).
+This repo contains explanation and examples about functional programming in C++. The explanations are listed in `.md` files, and examples and exercises are included in `.cpp` files to try out in the latest compiler like [Wandbox](https://wandbox.org). Sources that have been referred to are listed at the end of `.md` files.
+
+Most of the content is based on [Functional Programming in C++](https://codesignal.com/learn/paths/functional-programming-in-cpp). It is highly recommended to take up this free course for hands-on practice.
+
+For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwi82-b_pfmSAxWnhIkEHacPIkIQFnoECAwQAQ&url=https%3A%2F%2Fgithub.com%2Fgraninas%2Fcpp_functional_programming&usg=AOvVaw1a2HCdNLW9sArKzR4kY3Uo&opi=89978449).
 
 ## Prerequisites:
-1. Basics in C++ (See https://www.udemy.com/course/cpp23-fundamentals-projects-algorithms/)
-2. C++ template programming (See https://www.udemy.com/course/modcpptemplates/)
-3. C++ STL (See https://www.udemy.com/course/c-standard-template-library-in-practice/)
-4. Lambda expressions (See https://www.udemy.com/course/modcpp-lambda)
+1. [Fundamentals](https://www.udemy.com/course/cpp23-fundamentals-projects-algorithms/)
+2. [Templates](https://www.udemy.com/course/modcpptemplates/)
+3. [STL](https://www.udemy.com/course/c-standard-template-library-in-practice/)
+4. [Lambda expressions](https://www.udemy.com/course/modcpp-lambda)
 
 ## Table of contents:
 1. Introduction to functional programming
@@ -36,7 +40,7 @@ This repo contains explanation and examples about functional programming in C++.
    iii) Examples
 
    iv) Exercises
-6. Introduction to Boost.Range Library
+5. Introduction to Boost.Range Library
 
    i) Introduction
 
@@ -45,7 +49,7 @@ This repo contains explanation and examples about functional programming in C++.
    iii) Examples
 
    iv) Exercises
-7. Functional Programming Techniques in C++
-8. Advanced Functional Programming Techniques
+6. Functional Programming Techniques in C++
+7. Advanced Functional Programming Techniques
 
 Happy learning!
