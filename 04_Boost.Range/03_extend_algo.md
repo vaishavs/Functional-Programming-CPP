@@ -53,7 +53,7 @@ find_last(ForwardRange& rng, const Value& val)
 }
 ```
 
-#### Step 5: Verifying the implementation
+#### Step 4: Verifying the implementation
 With this structure, the custom algorithm is rendered indistinguishable from built-in Boost tools. Type deduction is handled, const-correctness is respected, and the declarative syntax preferred in modern C++ development is supported.
 ```
 #include <vector>
