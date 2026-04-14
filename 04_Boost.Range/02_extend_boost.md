@@ -1,5 +1,5 @@
 # Extending the Boost.Range library
-The Boost.Range library is structured in a way that the standard containers will work seamlessly with it. Extending a library is a great way to make any custom data structure work just as well with the it.
+The Boost.Range library is structured in a way that the standard containers will work seamlessly with it. Extending a library is a great way to make any custom data structure work just as well with it.
 
 Extending Boost.Range involves:
 - Making your custom type compatible with `boost::begin/end`
