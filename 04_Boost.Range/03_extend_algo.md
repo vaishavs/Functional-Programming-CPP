@@ -1,5 +1,5 @@
 ## Extending an algorithm
-Boost.Range algorithms are eager and return a result (value, iterator, or side effect) by consuming the range immediately. The construction of a custom algorithm within the Boost.Range ecosystem is achieved by moving beyond simple iterator pairs and embracing the library's trait-based architecture. It is through this architecture that the algorithm is ensured to work not just with standard containers, but also with adapted ranges, filtered views, and even raw arrays.
+Boost.Range algorithms are eager and return a result (value, iterator, or side effect) by consuming a range immediately. The construction of a custom algorithm within the Boost.Range ecosystem is achieved by moving beyond simple iterator pairs and embracing the library's trait-based architecture in order to work not just with standard containers, but also with adapted ranges, filtered views, and even raw arrays.
 
 A custom range algorithm is just a free function templated on a Range concept, using `boost::begin` / `boost::end` to work with any range uniformly.
 ```
@@ -153,7 +153,7 @@ int main() {
 }
 ```
 
-#### Note:
+### Note:
 To allow the algorithm to be used in a functional pipeline (e.g., `my_range | find_last(x)`), a "Range Adaptor" must be implemented. This is accomplished through the creation of a function object where the arguments are stored, and the overloading of operator `|`.
 ```
 namespace detail {
