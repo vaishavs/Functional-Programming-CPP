@@ -7,7 +7,7 @@ Extending Boost.Range can be done in three ways:
 3. Extending a custom adaptor
 
 
-Let's see how to extend a custom data structure.
+In this module, we will see how to extend a custom data structure.
 
 
 # Extending a custom container
