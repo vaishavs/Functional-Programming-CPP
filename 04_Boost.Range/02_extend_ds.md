@@ -12,7 +12,7 @@ In this module, we will see how to extend a custom data structure.
 
 # Extending a custom container
 Extending a container involves:
-- Making your custom type compatible with `boost::begin/end`
+- Making the custom type compatible with `boost::begin/end`
 - Optionally adding traits (`range_iterator`, `range_value`, etc.)
 - Enabling it to work with adaptors (`filtered`, `transformed`, etc.)
 
@@ -42,8 +42,8 @@ public:
 };
 ```
 
-#### Step 2: Adding a trait
-For types that cannot be modified, such as C structs, third-party classes, legacy code, or user-defined types (UDTs), two free-standing functions must be specified by a class for it to be useable as a certain Range concept:
+#### Step 2: Adding a trait 
+For types that *cannot be modified*, such as C structs, third-party classes, legacy code, or user-defined types (UDTs), two free-standing functions must be specified by a class for it to be useable as a certain Range concept:
 * `range_begin` 
 * `range_end`
 
@@ -62,21 +62,29 @@ namespace Foo
 
 	// The required functions. These should be defined in the same namespace as 'Pair'
 	template< class T >
-	inline T range_begin( Pair<T>& x ) { return x.first; }
+	inline T range_begin( Pair<T>& x ) {
+		return x.first;
+	}
 
 	template< class T >
-	inline T range_begin( const Pair<T>& x ) { return x.first; }
+	inline T range_begin( const Pair<T>& x ) {
+		return x.first;
+	}
 
 	template< class T >
-	inline T range_end( Pair<T>& x )  return x.last; }
+	inline T range_end( Pair<T>& x ) {
+		return x.last;
+	}
 
 	template< class T >
-	inline T range_end( const Pair<T>& x ) { return x.last; }
+	inline T range_end( const Pair<T>& x ) {
+		return x.last;
+	}
 }
 ```
 The `range_begin` / `range_end` hooks must live in the exact same namespace as the type.
 
-To fully integrate the unmodifiable/UDT with Boost, the metafunctions should also be specialized for the type, defined in `boost/range.hpp`:
+To fully integrate the unmodifiable/user-defined type with Boost, the metafunctions should also be specialized for the type, defined in `boost/range.hpp`:
 * `boost::range_mutable_iterator`
 * `boost::range_const_iterator`
 
@@ -89,10 +97,14 @@ To fully integrate the unmodifiable/UDT with Boost, the metafunctions should als
 namespace boost
 {
 	template< class T >
-	struct range_mutable_iterator< Foo::Pair<T> >  { typedef T type; };
+	struct range_mutable_iterator< Foo::Pair<T> >  {
+		typedef T type;
+	};
 
 	template< class T >
-	struct range_const_iterator< Foo::Pair<T> >  { typedef T type; };
+	struct range_const_iterator< Foo::Pair<T> >  {
+		typedef T type;
+	};
 }
 ```
 Now, this type can be used with adaptors and algorithms as usual.
@@ -125,16 +137,10 @@ namespace Foo
 namespace boost
 {
 	template< class T >
-	struct range_mutable_iterator< Foo::Pair<T> >
-	{
-		typedef T type;
-	};
+	struct range_mutable_iterator< Foo::Pair<T> > { typedef T type; };
 
 	template< class T >
-	struct range_const_iterator< Foo::Pair<T> >
-	{
-		typedef T type;
-	};
+	struct range_const_iterator< Foo::Pair<T> > { typedef T type; };
 
 } // namespace 'boost'
 
@@ -146,9 +152,8 @@ int main(int argc, const char* argv[])
 	std::vector<int>                    vec;
 	Foo::Pair<iter>                     pair = { vec.begin(), vec.end() };
 	const Foo::Pair<iter>&              cpair = pair;
-	//
+
 	// Notice that we call 'begin' etc with qualification.
-	//
 	iter i = boost::begin( pair );
 	iter e = boost::end( pair );
 	i      = boost::begin( cpair );
