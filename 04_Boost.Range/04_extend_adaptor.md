@@ -10,8 +10,7 @@ The full machinery involves:
 To illustrate this process, let us take a custom adaptor named `add_value` that takes a range of numbers and adds a specific constant to each element lazily as the range is traversed.
 
 #### Step 1: Defining the Underlying Iterator
-Because a range is defined by its iterators, an iterator must be written to wrap the original iterator and modify the behavior when dereferencing occurs.
-The `boost::iterator_adaptor` is utilized for this purpose. The boilerplate code (incrementing, comparing, etc.) is handled by this utility, so only the `dereference()` method needs to be overridden.
+Because a range is defined by its iterators, an iterator must be written to wrap the original iterator and modify the behavior when dereferencing occurs. The `boost::iterator_adaptor` is utilized for this purpose. The boilerplate code (incrementing, comparing, etc.) is handled by this utility, so only the `dereference()` method needs to be overridden.
 ```
 #include <boost/iterator/iterator_adaptor.hpp>
 
@@ -46,10 +45,10 @@ private:
     }
 };
 ```
-Note: The fifth template parameter for `iterator_adaptor` is set to `ValueType` rather than `ValueType&`. Because a new value is calculated on the fly `(*base + val)`, it must be returned by value.
+**Note:** The fifth template parameter for `iterator_adaptor` is set to `ValueType` rather than `ValueType&`. Because a new value is calculated on the fly (`*base + val`), it must be returned by value.
 
 #### Step 2: Creating the Adaptor "Holder" (The Tag)
-When the expression `rng | add_value(5)` is processed, `add_value(5)` is evaluated first. A temporary object is returned to hold the state (the number 5) until it can be bound to the range by the pipe operator.
+When the expression `rng | add_value(5)` is processed, `add_value(5)` is evaluated first. A temporary object needs to be returned to hold the state (the number `5`) until it can be bound to the range by the pipe operator.
 ```
 // The holder struct
 template <typename ValueType>
