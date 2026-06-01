@@ -161,3 +161,6 @@ auto take3  = [](auto v) { v.resize(3); return v; };
 auto result = pipeline(data, sorted, take3);
 // Result is now: {1, 2, 3}
 ```
+
+Spurce:
+https://www.youtube.com/watch?v=zVLLdGlbCSw
