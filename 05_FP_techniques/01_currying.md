@@ -35,9 +35,11 @@ add10(5);            // 15
 One of the most important mental shifts when learning currying is to stop thinking of functions as calculators and start thinking of them as factories.
 
 Instead of thinking:
+
 `Function + Arguments = Result`
 
 think:
+
 `Function + Some Arguments = New Function`
 
 This is a fundamentally different computational model. Consider the above example. It does not just add two numbers. It creates an addition machine. The function acts like a factory that manufactures other functions. Every curried function is effectively a small object with stored configuration.
