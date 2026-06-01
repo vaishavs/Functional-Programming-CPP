@@ -42,7 +42,7 @@ think:
 
 `Function + Some Arguments = New Function`
 
-This is a fundamentally different computational model. Consider the above example. It does not just add two numbers. It creates an addition machine. The function acts like a factory that manufactures other functions. Every curried function is effectively a small object with stored configuration.
+This is a fundamentally different computational model. Consider the above example. It does not just add two numbers. It creates an addition machine. The function acts like a factory that manufactures other functions. Every curried function is effectively a small object with stored configuration, thus avoiding side effects and creating small, reusable functions.
 
 ### Generic Curry Helper (Since C++17)
 With the advanced metaprogramming capabilities of C++17, specifically variadic templates and `if constexpr`, a generic curry helper can be created. This wrapper patiently collects arguments one by one until the underlying function's signature is fully satisfied, at which point it executes.
