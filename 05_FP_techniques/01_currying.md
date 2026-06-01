@@ -15,8 +15,6 @@ add5(3);              // 8
 add(10)(20);          // 30
 ```
 
-The standard library provides `std::bind` in the `<functional>` header to bind specific arguments to a function while leaving others open using placeholders (`std::placeholders`). In modern C++, lambdas are universally considered the preferred method for partial application, by capturing the values to bind and accepting the remaining variables as parameters.
-
 With `std::bind` and lambdas, the same effect is achieved as above:
 ```
 int add(int a, int b) { return a + b; }
