@@ -65,9 +65,33 @@ This is a fundamentally different computational model. Consider the above exampl
 
 ### Generic Curry Helper (Since C++17)
 With the advanced metaprogramming capabilities of C++17, specifically variadic templates and `if constexpr`, a generic curry helper can be created. This wrapper patiently collects arguments one by one until the underlying function's signature is fully satisfied, at which point it executes.
-```
-#include <functional>
 
+```
+// A generic curry helper for C++17
+template<typename F>
+auto curry(F f) {
+    return [f](auto... args) {
+        if constexpr (std::is_invocable_v<F, decltype(args)...>) {
+            return f(args...); // All arguments satisfied, execute
+        } else {
+            return curry([f, args...](auto... rest) {
+                return f(args..., rest...); // Wait for more arguments
+            });
+        }
+    };
+}
+
+int add3(int a, int b, int c) { return a + b + c; }
+// usage:
+auto r  = curry(add3)(1)(2)(3);   // 6
+auto p  = curry(add3)(1)(2);      // partial: closure waiting for c
+auto r2 = p(3);                   // 6
+```
+
+### Template-Based Currying (Since C++17)
+For developers seeking absolute maximum performance without relying solely on lambdas, C++17 allows for template-based currying.
+
+```
 #include <type_traits>
 
 template <typename F, typename... Args>
@@ -91,47 +115,37 @@ auto r2 = p(3);                   // 6
 
 #### The mechanism
 The function `curry(add3)` checks `is_invocable_v<F> (callable with zero args?)`. It isn't, so it returns a lambda. Calling that lambda with 1 recurses into `curry(add3, 1)`, which checks `is_invocable_v<F, int>` — still false for a 3-arg function — and so on, until three arguments have accumulated and the call finally fires.
-This is clever and works for ordinary functions and most function objects, but you should understand exactly where it breaks:
-* Default arguments fool the arity check. For `int g(int a, int b = 0)`, the expression `is_invocable_v<G, int>` is true, because `g(x)` is a legal call. So `curry(g)(5)` calls `g(5)` immediately and never accepts a second argument. The "try to call" strategy can't distinguish "you gave me enough" from "the rest have defaults."
+
+This is clever and works for ordinary functions and most function objects, but this is exactly where it breaks:
+* Default arguments fool the arity (number of arguments) check. For a function `int g(int a, int b = 0)`, the expression `is_invocable_v<G, int>` is true, because `g(x)` is a legal call. So `curry(g)(5)` calls `g(5)` immediately and never accepts a second argument. The "try to call" strategy can't distinguish "you gave me enough" from "the rest have defaults."
 * Overloaded functions can't be deduced. Passing a bare overload-set name leaves `F` unable to bind to a single type. This must be disambiguated with a cast (`static_cast<int(*)(int,int)>(&f)`) or the call should be wrapped in a lambda.
 * Variadic and heavily templated callables confuse `is_invocable`, since "callable with these args" may always be true.
 * Move-only argument types don't survive, because this version copies (`Args... args` by value, then re-copies on every recursive step).
 
-
-### Template-Based (arity-explicit) Partial Application (Since C++17)
-For developers seeking absolute maximum performance without relying solely on lambdas, C++17 allows for template-based partial application. By leveraging `std::tuple` and `std::apply`, bound arguments can be stored at compile time and unpacked alongside the remaining arguments when the function is finally invoked.
-
+The default-argument ambiguity entirely by telling curry how many arguments to collect, accumulating them in a tuple and firing with `std::apply` (C++17) when the count reaches zero:
 ```
 #include <tuple>
-#include <functional>
-#include <cmath>
+#include <cstddef>
 
-template<typename F, typename... Bound>
-class partial_t {
-    F func;
-    std::tuple<Bound...> bound_args;
-public:
-    partial_t(F f, Bound... args)
-        : func(f), bound_args(args...) {}
-
-    template<typename... Rest>
-    auto operator()(Rest&&... rest) const {
-        return std::apply([&](auto&... b) {
-            return func(b..., std::forward<Rest>(rest)...);
-        }, bound_args);
+template <std::size_t Remaining, typename F, typename Tuple>
+auto curry_impl(F f, Tuple args) {
+    if constexpr (Remaining == 0) {
+        return std::apply(f, args);
+    } else {
+        return [f, args](auto x) {
+            return curry_impl<Remaining - 1>(
+                f, std::tuple_cat(args, std::make_tuple(x)));
+        };
     }
-};
-
-// Helper factory to deduce template arguments
-template<typename F, typename... Args>
-auto partial(F f, Args... args) {
-    return partial_t<F, Args...>(f, args...);
 }
 
-// Usage Example
-auto power = [](double base, int exp) { return std::pow(base, exp); };
-auto square = partial(power, 2.0);  // base is fixed to 2.0, exp is left free
-square(10);  // Evaluates to 2^10 = 1024
+template <std::size_t N, typename F>
+auto curry_n(F f) {
+    return curry_impl<N>(f, std::tuple<>{});
+}
+
+// usage: the arity is fixed up front, defaults no longer matter
+auto r = curry_n<3>(add3)(1)(2)(3);   // 6
 ```
 
 Here, the number of steps is a compile-time constant rather than something inferred from invocability, so it's unambiguous and predictable.
