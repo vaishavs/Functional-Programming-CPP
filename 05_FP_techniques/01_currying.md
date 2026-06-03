@@ -234,7 +234,7 @@ auto result = pipeline(data, sorted, take3);
 ```
 
 ## When currying actually earns its place
-C++ is statically and strongly typed with no native higher-order-function syntax, so the proliferation of distinct closure types, the inability to curry overload sets without help, and the lifetime considerations all push against casual use. It pays off mainly for configurable callbacks, constructing small internal DSLs or expression builders, or composing pipelines in a point-free style. For everything else, an explicit lambda or `std::bind_front`/`std::bind_back` is clearer to the next reader. If a battle-tested generic implementation is needed, Boost.Hana provides `hana::curry`, which handles much of the arity and forwarding machinery.
+C++ is statically and strongly typed with no native higher-order-function syntax, so the proliferation of distinct closure types, the inability to curry overload sets without help, and the lifetime considerations all push against casual use. It pays off mainly for configurable callbacks, constructing small internal DSLs or expression builders, or composing pipelines in a point-free style. For everything else, an explicit lambda or `std::bind_front`/`std::bind_back` is preferrable. If a battle-tested generic implementation is needed, Boost.Hana provides `hana::curry`, which handles much of the arity and forwarding machinery.
 
 Source:
 https://www.youtube.com/watch?v=zVLLdGlbCSw
