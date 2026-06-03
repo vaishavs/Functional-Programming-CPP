@@ -1,6 +1,6 @@
-Currying is a transformation that splits a function of n arguments into a composition of n functions of one argument using a partial function evaluation, ie., fixing some function arguments (see lambdas and [std::bind](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/02_Designing_HO_Funcs/04_bind.md). 
+Currying is a transformation that splits a function of n arguments into a composition of `n` functions of one argument using a partial function evaluation, ie., fixing some function arguments (see lambdas and [std::bind](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/02_Designing_HO_Funcs/04_bind.md)). 
 
-Currying transforms f(a, b, c) into f(a)(b)(c) — each call returns a new function until all arguments have been supplied.
+Currying transforms `f(a, b, c)` into `f(a)(b)(c)` — each call returns a new function until all arguments have been supplied.
 
 ### Manual currying
 The most direct way is to hand-write nested lambdas, capturing each argument on the go:
@@ -174,7 +174,7 @@ auto curry(F&& f, Args&&... args) {
 }
 ```
 
-The mutable is required because each step moves out of its own captures into the next call. The tradeoff is that such a closure is effectively single-use: once you've called it and moved its state onward, calling it again sees moved-from members. For repeated partial application you'd capture by value instead and accept the copies. In C++17, where you can't expand a pack in an init-capture, you achieve the same by storing the accumulated arguments in a std::tuple member (as in the arity-explicit version above) rather than as a capture pack.
+The mutable is required because each step moves out of its own captures into the next call. The tradeoff is that such a closure is effectively single-use: once it is called and its state is moved onward, calling it again sees moved-from members. For repeated partial application, it is better to capture by value instead and accept the copies. In C++17, where it is not possible to expand a pack in an init-capture, the same can be achieved by storing the accumulated arguments in a `std::tuple` member (as in the arity-explicit version above) rather than as a capture pack.
 
 
 ## Real-World Use Cases
@@ -234,7 +234,7 @@ auto result = pipeline(data, sorted, take3);
 ```
 
 ## When currying actually earns its place
-C++ is statically and strongly typed with no native higher-order-function syntax, so the proliferation of distinct closure types, the inability to curry overload sets without help, and the lifetime considerations all push against casual use. It pays off mainly for configurable callbacks, constructing small internal DSLs or expression builders, or composing pipelines in a point-free style. For everything else, an explicit lambda or `std::bind_front`/`std::bind_back` is preferrable. If a battle-tested generic implementation is needed, Boost.Hana provides `hana::curry`, which handles much of the arity and forwarding machinery.
+C++ is statically and strongly typed with no native higher-order-function syntax, so the proliferation of distinct closure types, the inability to curry overload sets without help, and the lifetime considerations all push against casual use. It pays off mainly for configurable callbacks, constructing small internal DSLs or expression builders, or composing pipelines in a point-free style. For everything else, an explicit lambda or `std::bind_front`/`std::bind_back` can be used. If a battle-tested generic implementation is needed, Boost.Hana provides `hana::curry`, which handles much of the arity and forwarding machinery.
 
 Source:
 https://www.youtube.com/watch?v=zVLLdGlbCSw
