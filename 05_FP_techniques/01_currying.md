@@ -120,7 +120,7 @@ This is clever and works for ordinary functions and most function objects, but t
 * Default arguments fool the arity (number of arguments) check. For a function `int g(int a, int b = 0)`, the expression `is_invocable_v<G, int>` is true, because `g(x)` is a legal call. So `curry(g)(5)` calls `g(5)` immediately and never accepts a second argument. The "try to call" strategy can't distinguish "you gave me enough" from "the rest have defaults."
 * Overloaded functions can't be deduced. Passing a bare overload-set name leaves `F` unable to bind to a single type. This must be disambiguated with a cast (`static_cast<int(*)(int,int)>(&f)`) or the call should be wrapped in a lambda.
 * Variadic and heavily templated callables confuse `is_invocable`, since "callable with these args" may always be true.
-* Move-only argument types don't survive, because this version copies (`Args... args` by value, then re-copies on every recursive step).
+* Move-only argument types don't survive, because this version copies `Args... args` by value, then re-copies on every recursive step.
 
 The default-argument ambiguity entirely by telling curry how many arguments to collect, accumulating them in a tuple and firing with `std::apply` (C++17) when the count reaches zero:
 ```
