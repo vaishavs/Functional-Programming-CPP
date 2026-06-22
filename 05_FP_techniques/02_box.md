@@ -1,7 +1,5 @@
 # The box model
-An Applicative Functor (often just called an "`Applicative`") is a very practical design pattern that helps with writing cleaner, safer code when dealing with wrapped values—like `std::optional`, `std::expected`, or smart pointers.
-
-The "box" analogy is the most effective way to understand functional programming patterns. In C++, a box is not a cardboard container; it is a computational context. It is a set of strict rules governing how the item inside is allowed to be handled, moved, or altered.
+The "box" analogy is a very effective way to understand functional programming patterns. In C++, a box is not a cardboard container; it is a computational context. It is a set of strict rules governing how the item inside is allowed to be handled, moved, or altered.
 ```
    ┌───────────────┐
    │  ╔═════════╗  │
@@ -79,7 +77,7 @@ The cleanest way to keep them straight is by the kind of function that is being 
 * Monad: the function produces its own box; each step can depend on the results before it
 
 ```
-Functor      map :  (A -> B) -> box<A> -> box<B>
+   Functor      map :  (A -> B) -> box<A> -> box<B>
       │          apply a PLAIN function inside a box
       │  (add pure + ap)
       ▼
