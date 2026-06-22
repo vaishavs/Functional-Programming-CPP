@@ -96,3 +96,8 @@ Each rung includes the powers of the one above and adds more. Every monad is an 
             functor         applicative      monad
             (each level contains the one before it)
 ```
+
+
+Sources:
+* [C++ Ranges are Pure Monadic Goodness](https://bartoszmilewski.com/2014/10/17/c-ranges-are-pure-monadic-goodness/)
+* [Applicative: The Forgotten C++ Functional Pattern](https://www.youtube.com/watch?v=KDn28TZdKb4)
