@@ -1,14 +1,12 @@
-// box_functor.cpp
-//
 // Build & run (needs C++20 for concepts):
 //   g++ -std=c++20 -O2 box_functor.cpp -o box_functor && ./box_functor
 //
 // Eight "boxes," one shared idea: each has a member `transform` that maps the
 // contents (T -> U) while leaving the box's *shape* untouched. A single free
-// helper `map_over` works over all of them via one concept, and a single
-// `operator<<` per box keeps the demo uniform (and lets boxes nest/print).
+// helper `map_over` works over all of them via one concept.
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <utility>
@@ -32,7 +30,10 @@ struct Box {
     auto transform(F f) const -> Box<mapped_t<F, T>> {
         return { f(value) };                 // new box, same shape, new contents
     }
-    bool operator==(const Box&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Box& b) {
+        return os << "Box(" << b.value << ")";
+    }
 };
 
 // =====================================================================
@@ -53,7 +54,10 @@ struct Maybe {
         if (full) return Maybe<U>::some(f(value));   // transform the value
         return Maybe<U>::none();                     // empty stays empty
     }
-    bool operator==(const Maybe&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Maybe& m) {
+        return m.full ? os << "Maybe(" << m.value << ")" : os << "Maybe(empty)";
+    }
 };
 
 // =====================================================================
@@ -72,7 +76,13 @@ struct Many {
             result.values.push_back(f(v));   // f re-applied per element
         return result;
     }
-    bool operator==(const Many&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Many& m) {
+        os << "Many[";
+        for (std::size_t i = 0; i < m.values.size(); ++i)
+            os << m.values[i] << (i + 1 < m.values.size() ? ", " : "");
+        return os << "]";
+    }
 };
 
 // =====================================================================
@@ -87,7 +97,10 @@ struct Both {
     auto transform(F f) const -> Both<mapped_t<F, T>> {
         return { f(first), f(second) };      // both slots mapped
     }
-    bool operator==(const Both&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Both& b) {
+        return os << "Both(" << b.first << ", " << b.second << ")";
+    }
 };
 
 // =====================================================================
@@ -104,7 +117,10 @@ struct Tagged {
     auto transform(F f) const -> Tagged<C, mapped_t<F, T>> {
         return { tag, f(value) };            // tag preserved, value mapped
     }
-    bool operator==(const Tagged&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Tagged& t) {
+        return os << "Tagged{" << t.tag << " = " << t.value << "}";
+    }
 };
 
 // =====================================================================
@@ -124,7 +140,26 @@ struct Tree {
             out.children.push_back(c.transform(f));   // recurse, same shape
         return out;
     }
-    bool operator==(const Tree&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Tree& t) {
+        os << "Tree ";
+        t.stream_into(os);                   // label once; topology printed below
+        return os;
+    }
+
+private:
+    // Bare topology, recursive — no "Tree " prefix, so nested nodes stay clean.
+    void stream_into(std::ostream& os) const {
+        os << value;
+        if (!children.empty()) {
+            os << "(";
+            for (std::size_t i = 0; i < children.size(); ++i) {
+                children[i].stream_into(os);
+                if (i + 1 < children.size()) os << " ";
+            }
+            os << ")";
+        }
+    }
 };
 
 // =====================================================================
@@ -141,12 +176,17 @@ struct Lazy {
         auto inner = thunk;                           // capture current thunk
         return { [inner, f] { return f(inner()); } }; // runs only when forced
     }
+
+    friend std::ostream& operator<<(std::ostream& os, const Lazy& l) {
+        return os << "Lazy(forced -> " << l.force() << ")";
+    }
 };
 
 // =====================================================================
 // 8. Reader — a value computed on demand from an input R.
 //                                             flavor: dependency on an input
 // The box is itself R -> T; mapping composes f after it, giving R -> U.
+// (No operator<< — a Reader needs an input before it has anything to show.)
 // =====================================================================
 template <typename R, typename T>
 struct Reader {
@@ -176,56 +216,19 @@ auto map_over(Fa&& fa, Func&& f) {
     return std::forward<Fa>(fa).transform(std::forward<Func>(f));
 }
 
-// ---------- one operator<< per box, so every box prints the same way ----------
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Box<T>& b) {
-    return os << "Box(" << b.value << ")";
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Maybe<T>& m) {
-    return m.full ? os << "Maybe(" << m.value << ")" : os << "Maybe(empty)";
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Many<T>& m) {
-    os << "Many[";
-    for (std::size_t i = 0; i < m.values.size(); ++i)
-        os << m.values[i] << (i + 1 < m.values.size() ? ", " : "");
-    return os << "]";
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Both<T>& b) {
-    return os << "Both(" << b.first << ", " << b.second << ")";
-}
-template <typename C, typename T>
-std::ostream& operator<<(std::ostream& os, const Tagged<C, T>& t) {
-    return os << "Tagged{" << t.tag << " = " << t.value << "}";
-}
-template <typename T>
-void stream_tree(std::ostream& os, const Tree<T>& t) {   // bare topology, recursive
-    os << t.value;
-    if (!t.children.empty()) {
-        os << "(";
-        for (std::size_t i = 0; i < t.children.size(); ++i) {
-            stream_tree(os, t.children[i]);
-            if (i + 1 < t.children.size()) os << " ";
-        }
-        os << ")";
-    }
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Tree<T>& t) {
-    os << "Tree ";
-    stream_tree(os, t);
-    return os;
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Lazy<T>& l) {
-    return os << "Lazy(forced -> " << l.force() << ")";
-}
-
-// One printer for anything streamable (every box above qualifies, and they nest).
+// One printer for anything streamable (every box's friend operator<< qualifies,
+// and because they stream into os recursively, boxes nest for free).
 template <typename T>
 void print(const T& x) { std::cout << x << '\n'; }
+
+// Render any streamable box to text via operator<<. With no operator== on the
+// boxes, the functor laws are checked by comparing these renderings.
+template <typename T>
+std::string show(const T& x) {
+    std::ostringstream os;
+    os << x;
+    return os.str();
+}
 
 int main() {
     // One function, reused across every kind of box.
@@ -270,8 +273,9 @@ int main() {
     std::cout << std::boolalpha;
 
     // Law 1: transform(id) leaves the box unchanged.
+    // No operator== on the boxes — compare their operator<< renderings instead.
     auto identity_law = [&](const char* name, const auto& box) {
-        std::cout << "  " << name << " : " << (map_over(box, id) == box) << "\n";
+        std::cout << "  " << name << " : " << (show(map_over(box, id)) == show(box)) << "\n";
     };
     std::cout << "\n-- Law 1, identity: transform(id) == id --\n";
     identity_law("Box   ", a);
@@ -284,7 +288,7 @@ int main() {
     // Law 2: mapping f then g equals mapping (g ∘ f) in a single pass.
     auto compose_law = [&](const char* name, const auto& box) {
         std::cout << "  " << name << " : "
-                  << (map_over(map_over(box, add_one), times_two) == map_over(box, fused)) << "\n";
+                  << (show(map_over(map_over(box, add_one), times_two)) == show(map_over(box, fused))) << "\n";
     };
     std::cout << "\n-- Law 2, composition: transform(f) then transform(g) == transform(g.f) --\n";
     compose_law("Box   ", a);
@@ -294,8 +298,8 @@ int main() {
     compose_law("Tagged", g);
     compose_law("Tree  ", t);
 
-    // Lazy and Reader wrap callables, so they aren't equality-comparable;
-    // observe the laws by forcing / applying both sides instead.
+    // Lazy and Reader hold deferred computations; run them (force / apply)
+    // and compare the resulting values directly.
     std::cout << "\n-- same laws, observed for the function-style boxes --\n"
               << "  Lazy   : "
               << (map_over(map_over(z, add_one), times_two).force() == map_over(z, fused).force()) << "\n"
