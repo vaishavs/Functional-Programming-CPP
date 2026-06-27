@@ -3,7 +3,7 @@ C++ had initially started out as an imperative programming language. That is, th
 
 For instance, consider a factorial of an integer: 
 
-```
+```cpp
 int fac(unsigned int n)
 {
   return (n == 0) ? 1 : (n * fac(n-1));
@@ -19,7 +19,7 @@ The way functional programming is used in C++ is to write building blocks using 
  
 ### Composing algorithms
 Consider a problem statement, where we have to find the biggest magnitude of an odd integer in the list ```[3, 0, 2, -1, 5, -7, 8]```.  In the regular imperative programming, it would look something like this:
-```
+```cpp
 int biggest_odd_magnitude(auto&& rng)
 {
    int candidate = -1;
@@ -41,7 +41,7 @@ ii) Keep only the odd ones 
 iii) Find the maximum
 
 After composition, the code looks like:
-``` 
+```cpp
 namespace stdr = std::ranges;
 namespace stdv = std::views;
  int biggest_odd_magnitude(auto&& rng)
@@ -71,14 +71,14 @@ Using them minimizes the use of the ```for``` loop.
 ### Composing functions
 Consider an example that doubles numbers upto 500 using string input.  The exception is represented by ```std::unexpected```.
 Let's first define error types:
-```
+```cpp
 // Define the error type as a simple string for this example
  using Error = std::string;
  // Define a type alias for a result that is an int or an Error
  using ExpectedInt = std::expected<int, Error>;
 ```
 And functions that might fail: 
-```
+```cpp
 // 1. A function that might fail (converts std::string to integer)
  ExpectedInt stringToInt(const std::string& s)
 {
@@ -110,7 +110,7 @@ void handleResult(ExpectedInt result) {
 ```
  
 Now, the composed code looks like: 
-```
+```cpp
 // Input list
  std::string list[] = {  "123",  // Success
                         "abc",  // Failure: the input is not a number
@@ -137,7 +137,7 @@ Unfortunately, mixing different kinds of optionalness/failure is difficult. But 
  
 ### Composing I/O
 Pure functions are those which always produce the same value for the same input without side-effects. This essentially means no global state, and no functions interacting with the outside world.  However, in C++, functions need not be pure, but it is still a good idea to separate I/O from computation, by composing actions and executing them later. Consider an example where an integer is read as an upper limit, the fibonacci numbers are computed, and the results are written, asynchronously.
-```
+```cpp
 namespace stdx = std::execution;
  stdx::sender auto async_read_int();
  stdx::sender auto async_write_int(int i);
