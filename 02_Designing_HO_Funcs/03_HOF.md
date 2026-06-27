@@ -3,7 +3,7 @@ Higher order functions are those which take one or more fucntions as arguments a
 
 ## Functions taking another function(s)
 For example, standard algorithms like ```std::sort``` take a function as one of the arguments.
-```
+```cpp
 std::sort(nums.begin(), nums.end(), [](int a, int b) {
     return a > b; // Custom descending order logic
 });
@@ -12,7 +12,7 @@ Any callable entities that behave like functions, such as function pointers, lam
 
 ## Functions returning another function
 Higher order functions can generate new functions on the fly using lambdas or ```std::function``` with ```auto``` return type.
-```
+```cpp
 // HOF that returns a new lambda function
 auto createMultiplier(int factor) {
     return [factor](int x) {
