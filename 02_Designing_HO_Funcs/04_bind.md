@@ -2,7 +2,7 @@
 The ```std::bind``` is part of the ```<functional>``` library in C++. It allows us to bind one or more arguments to a function, creating new callable objects by pre-setting (binding) some or all arguments of an existing function. The function is invoked only when someone calls the function object returned by ```std::bind```.
 
 ### Syntax
-```
+```cpp
 auto new_callable = std::bind(function, arguments...);
 ```
 
@@ -10,7 +10,7 @@ There are several ways in which ```std::bind``` is used.
 ### Placeholders
 The ```std::bind``` takes a callable (function pointer, functor, or lambda) as its first argument, followed by the specific values to be "fixed". To leave some arguments "open" to be provided at the actual call time, ```std::placeholders::_1```, ```_2```, etc., are used. Placeholders are special objects used in ```std::bind``` to represent arguments provided later. By using a placeholder, we say: "Hey, there will be an argument, but it is not present right now!" The ```std::placeholders::_1``` represents the first parameter, ```std::placeholders::_2``` represents the second parameter, and so on.
 
-```
+```cpp
 #include <iostream>
 #include <functional>
 
@@ -33,7 +33,7 @@ In this example:
 
 ### Argument reordering and duplication
 Placeholders can be used to change the order of its function parameters or repeat them.
-```
+```cpp
 void divide(double num, double den) { std::cout << num / den << "\n"; }
 
 int main() {
@@ -50,7 +50,7 @@ int main() {
 ```
 ### Binding Member Functions
 When binding a member function, provide a pointer to the function and an instance (or pointer to an instance) of the class *must* be provided as the first argument after the function name.
-```
+```cpp
 struct Calculator {
     void multiply(int a, int b) { std::cout << a * b; }
 };
@@ -67,7 +67,7 @@ int main() {
 By default, ```std::bind``` copies the arguments provided at the time of binding. It can cause significant performance overhead when accidentally copying large objects like ```std::string``` or other container types.
 Also, ```std::bind``` cannot automatically resolve which version of an overloaded function you want to use. This leads to complex compilation errors.
 For example,
-```
+```cpp
 void print(int x);
 void print(double x);
 
@@ -79,7 +79,7 @@ auto l = [](int x) { print(x); };
 ```
 
 If an attempt is made to bind move-only objects like ```std::move``` or ```std::unique_ptr```, and/or if they are used along with repeated placeholders, this leads to undefined behaviour, because ```std::bind``` tries to copy them internally. What happens is that the first parameter may successfully "steal" the resource, leaving its own place as well as the others with a null or empty object.
-```
+```cpp
 #include <iostream>
 #include <functional>
 #include <memory>
@@ -116,7 +116,7 @@ int main() {
 }
 ```
 If an invalid or null function pointer is bound, ```std::bind``` will not catch this at compile time. Instead, it will throw ```std::bad_function_call``` at runtime when the object is invoked.
-```
+```cpp
 #include <iostream>
 #include <functional>
 
@@ -145,7 +145,7 @@ int main() {
 Hence, one way to overcome them is to bind by reference.
 # Binding by reference
 Binding by reference can be useful when the bound parameter needs to reflect any changes made to the original variable. This means that the bound function will use the current value of the variable when invoked, not the value it had when the function was created. To bind by reference, ```std::ref``` is used for non-const references and ```std::cref``` is used for const references. The ```std::ref``` and ```std::cref``` are helper functions defined in ```<functional>``` header that are used to generate a ```std::reference_wrapper```. They automatically convert to a raw reference (```T&```) when passed to a function that expects the underlying type.
-```
+```cpp
 #include <iostream>
 #include <functional>
 
@@ -171,7 +171,7 @@ int main() {
 Wrapping an argument in ```std::ref``` or ```std::cref``` ensures the utility stores a reference instead of a local copy. 
 
 Binding by reference is particularly useful for working with large data structures where copying them would be inefficient. C++ does not allow containers of raw references (e.g., ```std::vector<int&>```) because references are not objects. The ```std::reference_wrapper``` can be used to store rebindable references in a collection.
-```
+```cpp
  int main() {
    int a = 1, b = 2;
    std::vector<std::reference_wrapper<int>> vec;
@@ -185,7 +185,7 @@ Binding by reference is particularly useful for working with large data structur
 }
 ```
 Also, standard algorithms like ```std::for_each``` take functors by value. If a functor is to be used and then its modified state should be inspected afterward, ```std::reference_wrapper``` comes in handy. 
-``` 
+```cpp 
  struct Counter {
    int count = 0;
    void operator()(int) { count++; }
@@ -200,7 +200,7 @@ int main() {
 ```
 ## Pitfalls
 The ```std::reference_wrapper``` cannot be used on rvalues (temporary objects) because it would lead to immediate dangling references. It is restricted to lvalues only. It does not extend the lifetime of the object it refers to. The developer must ensure the original object outlives the wrapper. 
-```
+```cpp
 auto get_callback() {
     int x = 42;
     // DANGER: Binding a reference to a local variable 'x'
@@ -215,7 +215,7 @@ int main() {
 ```
 
 However, unlike a raw reference, which is permanently bound to its initial object, ```std::reference_wrapper``` can be reassigned to point to a different object. This *may* lead to bugs where developers expect to update the value of the referred object but accidentally rebind the wrapper to a different instance.
-```
+```cpp
 int a = 10, b = 20;
 std::reference_wrapper<int> ref = a;
 
@@ -227,7 +227,7 @@ std::cout << a; // Still prints 10
 ```
 
 The ```std::reference_wrapper``` provides an implicit conversion operator to T&. This is convenient but creates ambiguity in template deduction or when using the auto keyword.
-```
+```cpp
 int x = 5;
 auto r = std::ref(x); 
 
@@ -236,7 +236,7 @@ auto r = std::ref(x);
 ```
 
 A ```std::reference_wrapper``` must always refer to a valid object upon initialization. However, it can be initialized from a dereferenced null pointer, which the compiler may not catch.
-```
+```cpp
 int* ptr = nullptr;
 // This might compile but causes a crash/UB at runtime
 std::reference_wrapper<int> ref = *ptr; 
