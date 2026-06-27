@@ -40,7 +40,7 @@ A Functor handles the safety checks of a container internally. Consider a functi
 An applicative applies a multi-argument function across several boxes simultaneously. It takes values out of multiple boxes, runs a multi-argument function, and puts the final result in a box. The function is itself in a box, and it is applied to a boxed argument.
 
 A Functor takes a one-argument function. But in case of using a multi-argument function, using a functor would be very limiting. For example, consider a function that requires multiple arguments (like `add(x, y)`), and those arguments are trapped inside separate boxes.
-```
+```cpp
 auto stuck = a.transform([](int x){
     return [x](int y){ return x + y; };   // partially-applied add
 });
@@ -52,7 +52,7 @@ A functor cannot operate on multiple boxes at once. An applicative applies that 
 [![diagram-2-applicative.jpg](https://i.postimg.cc/d3Qwxy4d/diagram-2-applicative.jpg)](https://postimg.cc/zbQsLVmX)
 
 So the two steps chained together solve the problem:
-```
+```cpp
 ap( a.transform(add_curried), b )   // optional{8}
 ```
 The payoff is combining. 
