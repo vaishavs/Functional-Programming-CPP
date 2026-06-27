@@ -11,7 +11,7 @@ The following guide details the construction of a `find_last` algorithm—by whi
 
 #### Step 1: Defining the Range Traits
 The determination of the correct types for iterators and values, without the assumption that the input is a specific container like `std::vector`, is the first requirement for a robust range algorithm. These pieces of information metadata are extracted through header-only traits provided by Boost. Through the use of `boost::range_iterator<Range>::type`, the algorithm is automatically adjusted according to whether a const or non-const range is being processed.
-```
+```cpp
 #include <boost/range/functions.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/range/concepts.hpp>
@@ -28,12 +28,14 @@ find_last(ForwardRange& rng, const Value& val)
 #### Step 2: Concept Assertion
 Requirements are enforced at compile time before any logic is executed. If the ability to step backward is required by the algorithm (e.g., for performance), an assertion must be made that the `BidirectionalRangeConcept` is satisfied by the range. Cryptic template error messages deep in the compilation stack are prevented by this practice.
 
-`BOOST_CONCEPT_ASSERT((boost::BidirectionalRangeConcept<ForwardRange>));`
+```cpp
+BOOST_CONCEPT_ASSERT((boost::BidirectionalRangeConcept<ForwardRange>));
+```
 
 #### Step 3: Implementation via Range Accessors
 The standalone `boost::begin(rng)` and `boost::end(rng)` functions are used instead of calling `rng.begin()`. This distinction is considered critical; these functions are overloaded so that C-style arrays and pointer pairs, which do not possess member functions, can be handled.
 
-```
+```cpp
 template<typename ForwardRange, typename Value>
 inline typename boost::range_iterator<ForwardRange>::type
 find_last(ForwardRange& rng, const Value& val)
@@ -55,7 +57,7 @@ find_last(ForwardRange& rng, const Value& val)
 
 #### Step 4: Verifying the implementation
 With this structure, the custom algorithm is rendered indistinguishable from built-in Boost tools. Type deduction is handled, const-correctness is respected, and the declarative syntax preferred in modern C++ development is supported.
-```
+```cpp
 #include <vector>
 #include <iostream>
 
@@ -76,7 +78,7 @@ int main() {
 The decoupling of code from specific data structures is ensured by this tiered approach, while the full optimization benefits of the Boost.Range iterator abstractions are gained.
 
 The complete implementation looks like this:
-```
+```cpp
 #include <iostream>
 #include <vector>
 #include <iterator>
@@ -155,7 +157,7 @@ int main() {
 
 ### Note:
 To allow the algorithm to be used in a functional pipeline (e.g., `my_range | find_last(x)`), a "Range Adaptor" must be implemented. This is accomplished through the creation of a function object where the arguments are stored, and the overloading of operator `|`.
-```
+```cpp
 namespace detail {
     template<typename T>
     struct find_last_forwarder {
@@ -181,7 +183,7 @@ inline detail::find_last_forwarder<T> find_last(T val)
 ```
 
 Then, it could be used in a pipeline:
-```
+```cpp
 auto it = numbers | find_last(2);
 ```
 
