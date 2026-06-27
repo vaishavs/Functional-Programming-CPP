@@ -31,7 +31,7 @@ A standard HOF typically follows this structure:
 algorithm(execution_policy?, range_begin, range_end, seed?, callable);
 ```
 For example:
-```
+```cpp
 int sum = std::accumulate(
     vec.begin(),
     vec.end(),
@@ -109,7 +109,7 @@ The namespace alias ```std::views``` is provided as a shorthand for ```std::rang
 The view adapters are defined under ```std::views```, such as ```std::views::filter```, ```std::views::transform```, etc., and don’t immediately process data. Instead, they create a view — a lightweight object that does not own or copy data from the container it works on, but just defines how elements should be seen. This allows for lazy evaluation, where the operations are defined immediately but logic is only executed when we actually iterate over the final result. For more on lazy evaluation in C++, read "Functional Programming in C++" by Ivan Cukic or "Learning C++ Functional Programming" by Wisnu Anggoro.
 
 Custom views can also be created by inheriting from ```std::ranges::view_interface```.
-```
+```cpp
 template<std::ranges::view V>
 class my_view : public std::ranges::view_interface<my_view<V>> {
     V base_;
@@ -123,7 +123,7 @@ public:
 ```
 
 A view must satisfy:
-```
+```cpp
 template<typename V>
 concept view = std::ranges::range<V>
             && std::movable<V>
@@ -158,7 +158,7 @@ Chaining pipes creates a tree of wrapper objects rooted at the original range. E
 It must be kept in mind that the full type of a deeply composed pipeline can be extraordinarily long and complex. If a compilation error is generated in a pipeline expression, the error message will typically dump this full nested type, which can be hundreds or thousands of characters long. Learning to read these errors requires practice and a clear mental model of which adaptor corresponds to which layer. Working from the inside out makes these errors tractable. The ```auto``` keyword is essential when working with adapted ranges precisely because the types are so complex and unwriteable by hand. The ```auto``` deduced type will be the full nested (hidden) type, which is correct and efficient. Also, the lifetime of the original range must exceed the lifetime of the view.
 
 Consider a traditional STL example:
-```
+```cpp
 std::vector<User> active_users;
 std::copy_if(users.begin(), users.end(), 
              std::back_inserter(active_users), 
@@ -175,7 +175,7 @@ This approach:
 * Can cause memory and performance overhead
 
 With ranges, no intermediate containers are needed. One of the big design wins of ranges is that composition is natural and efficient. The above example would then look like:
-```
+```cpp
 auto result = users 
 | std::views::filter(is_active) 
 | std::views::transform(get_name);
@@ -192,7 +192,7 @@ This contract ensures that:
 * Views can be passed cheaply (by value) into algorithms or functions
 
 Views are non‑owning, so it must be ensured that the underlying range outlives the view.
-```
+```cpp
 auto make_view() {
     std::vector<int> local = {1, 2, 3};
     auto v = local | std::views::filter([](int x) { return x > 1; });
@@ -205,25 +205,25 @@ The code above demonstrates a "dangling view." When we try to use the result, th
 
 To avoid this situation, either:
 * Keep the base alive:
-```
+```cpp
 std::vector<int> data = {1, 2, 3};
 auto pipeline = data | std::views::filter(...);
 for (int x : pipeline) { }   // OK
 ```
 * Or store the result:
-```
+```cpp
 std::vector<int> stored;
 std::ranges::copy(pipeline, std::back_inserter(stored));
 ```
 
 * Or materialize with ```std::ranges::to``` (Since C++23 and GCC v16)
-```
+```cpp
 std::vector<int> vec;
 // Works from C++23 and GCC v16 onwards
 auto result_vec = std::ranges::to<std::vector<int>>(vec);
 ```
 Consider an example:
-```
+```cpp
 std::vector<std::string> names = people | filter(is_female)
                                         | transform(name)
                                         | take(3);
@@ -270,11 +270,11 @@ From the address‑space perspective:
 No extra storage is allocated for the intermediate sequences.
 
 Instead, the machine code for
-```
+```cpp
 for (int x : pipeline) { ... }
 ```
 can be optimized into a loop that conceptually looks like:
-```
+```cpp
 int count = 0;
 for (auto it = v.begin(); it != v.end() && count < 3; ++it) {
     if (*it <= 0) continue;
