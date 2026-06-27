@@ -5,7 +5,7 @@ Currying transforms `f(a, b, c)` into `f(a)(b)(c)` — each call returns a new f
 ### Manual currying
 The most direct way is to hand-write nested lambdas, capturing each argument on the go:
 
-```
+```cpp
 // Manual currying
 auto add = [](auto a) {
     return [a](auto b) {
@@ -20,7 +20,7 @@ add(10)(20);          // 30
 
 With `std::bind` and lambdas, the same effect can be achieved as above:
 
-```
+```cpp
 int add(int a, int b) { return a + b; }
 
 // std::bind — verbose, harder to read
@@ -45,7 +45,7 @@ It is worth noting that `add(1)`, `add(1)(2)`, and `add` all have different, unn
 
 The `std::bind` is flexible (it can reorder and skip arguments via placeholders) but verbose and historically a source of subtle copy/reference bugs. C++20 added the cleaner `std::bind_front`, which fixes leading arguments, and C++23 added `std::bind_back` for trailing ones. Hence, for most real code, `std::bind_front`/`std::bind_back` or a small lambda is preferable; full currying is rarely the most readable choice.
 
-```
+```cpp
 auto f = std::bind_front(add3, 1, 2);   // C++20: fixes a=1, b=1; f(3) -> 6
 auto g = std::bind_back(add3, 3);       // C++23: fixes the last arg
 
@@ -66,7 +66,7 @@ This is a fundamentally different computational model. Consider the above exampl
 ### Generic Curry Helper (Since C++17)
 With the advanced metaprogramming capabilities of C++17, specifically variadic templates and `if constexpr`, a generic curry helper can be created. This wrapper patiently collects arguments one by one until the underlying function's signature is fully satisfied, at which point it executes.
 
-```
+```cpp
 // A generic curry helper for C++17
 template<typename F>
 auto curry(F f) {
@@ -91,7 +91,7 @@ auto r2 = p(3);                   // 6
 ### Template-Based Currying (Since C++17)
 For developers seeking absolute maximum performance without relying solely on lambdas, C++17 allows for template-based currying.
 
-```
+```cpp
 #include <type_traits>
 
 template <typename F, typename... Args>
@@ -123,7 +123,7 @@ This is clever and works for ordinary functions and most function objects, but t
 * Move-only argument types don't survive, because this version copies `Args... args` by value, then re-copies on every recursive step.
 
 The default-argument ambiguity entirely by telling curry how many arguments to collect, accumulating them in a tuple and firing with `std::apply` (C++17) when the count reaches zero:
-```
+```cpp
 #include <tuple>
 #include <cstddef>
 
@@ -153,7 +153,7 @@ Here, the number of steps is a compile-time constant rather than something infer
 #### A move-correct, perfect-forwarding version (C++20)
 For production use with heavy or move-only callables and arguments, a forward is preferred over a copy, and the call is routed through `std::invoke` so the same code handles plain functions, function objects, and pointers to members. C++20's init-capture pack expansion (`[...args = ...]`) makes this expressible:
 
-```
+```cpp
 #include <functional>
 #include <type_traits>
 #include <utility>
@@ -180,7 +180,7 @@ The mutable is required because each step moves out of its own captures into the
 ## Real-World Use Cases
 ### Algorithms with Predicates
 Partial application helps to adapt complex conditions into simple predicates.
-```
+```cpp
 #include <algorithm>
 #include <vector>
 
@@ -195,7 +195,7 @@ auto count = std::count_if(nums.begin(), nums.end(), above);
 ```
 ### Callbacks and Event Handlers
 When interacting with logging systems or UI events, a generalized function is often used that to specialize for specific contexts to avoid repetitive boilerplate.
-```
+```cpp
 #include <iostream>
 #include <string>
 
@@ -213,7 +213,7 @@ info("System booted");           // Outputs: [INFO]  System booted
 
 ### Data Pipelines and Composition
 By partially applying transformation rules, highly readable data pipelines can be composed using modern C++ fold expressions.
-```
+```cpp
 #include <vector>
 #include <algorithm>
 
