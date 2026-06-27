@@ -203,7 +203,7 @@ struct Box {
    template <typename F>
    auto transform(F&& f) -> Box<std::invoke_result_t<F, const T&>>
    {
-      return { std::forward<F>(f)(value) };   // new box, same shape, new contents
+      return { f(value) };   // new box, same shape, new contents
    }
 };
 
@@ -289,7 +289,7 @@ template <typename T, typename F>
 auto transform(const std::shared_ptr<T>& p, F&& f) -> std::shared_ptr<std::invoke_result_t<F, const T&>>
 {
     if (!p) return nullptr; // empty stays empty
-    return std::make_shared<std::invoke_result_t<F, const T&>>(std::forward<F>(f)(*p));
+    return std::make_shared<std::invoke_result_t<F, const T&>>(f(*p));
 }
 ```
 Usage:
@@ -317,7 +317,7 @@ The "shape" preserved here is *whether the box is empty*. `f` runs zero or one t
 template <typename A, typename B, typename F>
 auto transform(const std::pair<A, B>& p, F&& f) -> std::pair<A, std::invoke_result_t<F, const B&>>
 {
-    return { p.first, std::forward<F>(f)(p.second) };        // first preserved
+    return { p.first, f(p.second) };        // first preserved
 }
 ```
 Usage:
@@ -387,7 +387,7 @@ Whenever there is a shape `F<A>` with a lawful way to turn `A`s into `B`s undern
 template <typename H, typename F>
 auto transform(H h, F f) {
     return [h = std::move(h), f = std::move(f)](auto&& r) {
-        return f( h(std::forward<decltype(r)>(r)) );   // f after h
+        return f( h(r) );   // f after h
     };
 }
 
@@ -422,7 +422,7 @@ concept Transformable = requires(Fa fa, Func f) {
 template <typename Func, typename Fa>
     requires Transformable<Fa, Func>
 auto map_over(Fa&& fa, Func&& f) {
-    return std::forward<Fa>(fa).transform(std::forward<Func>(f));
+    return fa.transform(f);
 }
 
 template <typename T>
@@ -434,7 +434,7 @@ struct Box {
    // transform: (T -> F)  on  Box<T>  yields  Box<F>
    template <typename F>
    auto transform(F&& f) -> Box<std::invoke_result_t<F, const T&>> {
-      return { std::forward<F>(f)(value) };   // new box, same shape, new contents
+      return { f(value) };   // new box, same shape, new contents
    }
 };
 
