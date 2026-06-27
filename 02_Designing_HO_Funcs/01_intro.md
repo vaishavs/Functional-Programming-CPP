@@ -14,27 +14,27 @@ A function pointer is a variable that stores the memory address of a function. T
 
 ### Global/Namespace function pointer
 A global or namespace function pointer is declared as:
-```
+```cpp
 return_type (*funcPtr)(parameter_types);
 ```
 The the address of a function is then assigned to it.
-```
+```cpp
 funcPtr = &myFuncName; // '&' is optional; 'funcPtr = myFuncName;' also works
 ```
 Finally, the function is invoked via its pointer:
-```
+```cpp
 auto result = funcPtr(/* ... */);
 ```
 
 For example, consider a function
-```
+```cpp
 int add (int a, int b)
 {
     return a+b;
 }
 ```
 Its function pointer would be:
-```
+```cpp
 // 1. Declaration: return_type (*pointer_name)(parameter_types);
 int (*funcPtr)(int, int);
 
@@ -46,7 +46,7 @@ int result = funcPtr(10, 5); // Equivalent to add(10, 5)
 ```
 
 Function pointers can also be used with ```typedef```.
-```
+```cpp
 typedef int (*funcPtr)(int, int);
 // ...
 funcPtr f = add; // OR, funcPtr f = &add;
@@ -55,12 +55,12 @@ int res = f(10, 5);
 
 ### Member function pointers
 Function pointers to member functions are declared in the following manner:
-```
+```cpp
 ReturnType (ClassName::*ptrName)(Params) = &ClassName::Member;
 ```
 And the invocation is done using ```.*``` or ```->*``` operator.
 For example:
-```
+```cpp
 class Calculator {
 public:
     int add(int a, int b) { return a + b; }
@@ -94,13 +94,13 @@ int main() {
 Just as there is a pointer to a function, an alias (reference) can be created for a function name. The function name binds directly to the reference rather than decaying to a pointer.
 
 **Syntax**
-```
+```cpp
 return_type (&referenceName)(param_list)
 ```
 The `&` goes next to the name, wrapped in parentheses to bind tighter than the return type.
 
 For example:
-```
+```cpp
 void greet()
 {
     std::cout << "Hello!";
@@ -116,13 +116,13 @@ int main()
 A function reference must be initialized when declared (there is no "null" reference), and like all references it cannot be uninitialized or rebound to a different function afterward. Once a reference is bound to an object (or function), it cannot be changed to refer to another one.
 
 Taking the address of a function reference gives you a pointer to the underlying function.
-```
+```cpp
 int (*p)(int, int) = &fref;        // p points to add
 ```
 The call syntax of a function reference is identical to that of a function pointer — `fref(...)`, `fptr(...)`, and `(*fptr)(...)` all work — but the difference is that a reference binds to a function without that decay.
 
 Function references show up most often in template deduction. Passing a function by reference deduces the function type; passing by value decays it to a pointer:
-```
+```cpp
 template <typename T> void byRef(T& f);   // T = int(int,int), f is a function reference
 template <typename T> void byVal(T  f);   // T = int(*)(int,int), f is a function pointer
 
@@ -133,7 +133,7 @@ byVal(add);   // f is a pointer to add
 ## Functors
 A functor is basically a class that overloads the function call operator (`()`), allowing an instance of a class to be called like a function. A functor's type is known at compile-time, so compilers can often inline the function logic directly into the calling code. This makes functors generally faster than function pointers.
 For example:
-```
+```cpp
 #include <iostream>
 
 // A functor
@@ -157,7 +157,7 @@ There are three big advantages over a regular function or a function pointer:
 
 State doesn't have to be mutable — it can be constructed on the go.
 Consider an example:
-```
+```cpp
 class MultiplyBy {
     int factor;
 public:
@@ -171,7 +171,7 @@ times3(10);   // 30
 Now, `times3` behaves like a specialized `multiply-by-3` function. This creates a family of functions parameterized by factor. In other words, a factory of functions can be created by configuring an additional member of a functor.
 
 A functor can also change its state after multiple calls, the way a function changes global or static variables to record state changes.
-```
+```cpp
 struct Accumulator {
     int sum = 0;
     int operator()(int x) {   // note: NOT const, it mutates
@@ -194,13 +194,13 @@ The C++ Standard Library provides various built-in functors for common operation
 One interesting modern C++ feature is that Lambdas *are* functors. The compiler generates an anonymous functor (a "closure type") when it encounters a lambda. The capture list becomes member variables, the body becomes the `operator()` body, and the call operator is const by default.
 
 That is,
-```
+```cpp
 int threshold = 10;
 auto pred = [threshold](int x) { return x > threshold; };
 ```
 
 is conceptually equivalent to:
-```
+```cpp
 class __anonymous {
     int threshold;
 public:
@@ -211,7 +211,7 @@ auto pred = __anonymous(threshold);
 ```
 
 Adding mutable makes it non-const so the body can modify captured-by-value members:
-```
+```cpp
 auto counter = [n = 0]() mutable { return ++n; };   // mutable: can change n
 counter();  // 1
 counter();  // 2
@@ -220,7 +220,7 @@ That's exactly the `Accumulator` pattern from earlier, written compactly. Captur
 
 
 A functor can also be made generic to support any data type:
-```
+```cpp
 struct Print {
     template <typename T>
     void operator()(const T& x) const {
@@ -235,12 +235,12 @@ p(3.14);      // works
 ```
 
 Its equivalent lambda is:
-```
+```cpp
 auto print = [](const auto& x) { std::cout << x << '\n'; };
 ```
 
 To evaluate a functor at compile-time, `operator()` can be constexpr and marked `noexcept`. For example:
-```
+```cpp
 struct Square {
     constexpr int operator()(int x) const noexcept { return x * x; }
 };
