@@ -11,7 +11,7 @@ To illustrate this process, let us take a custom adaptor named `add_value` that 
 
 #### Step 1: Defining the Underlying Iterator
 Because a range is defined by its iterators, an iterator must be written to wrap the original iterator and modify the behavior when dereferencing occurs. The `boost::iterator_adaptor` is utilized for this purpose. The boilerplate code (incrementing, comparing, etc.) is handled by this utility, so only the `dereference()` method needs to be overridden.
-```
+```cpp
 #include <boost/iterator/iterator_adaptor.hpp>
 
 // Template on the underlying Iterator and the Type of value to add
@@ -49,7 +49,7 @@ private:
 
 #### Step 2: Creating the Adaptor "Holder" (The Tag)
 When the expression `rng | add_value(5)` is processed, `add_value(5)` is evaluated first. A temporary object needs to be returned to hold the state (the number `5`) until it can be bound to the range by the pipe operator.
-```
+```cpp
 // The holder struct
 template <typename ValueType>
 struct add_value_holder {
@@ -66,7 +66,7 @@ add_value_holder<ValueType> add_value(ValueType v) {
 
 #### Step 3: Overloading the Pipe Operator (operator `|`)
 The interaction between a Range and the Holder is defined by overloading operator `|`. A range is taken on the left and an `add_value_holder` is taken on the right. A `boost::iterator_range`, populated with the custom iterators, is then returned.
-```
+```cpp
 #include <boost/range/iterator_range.hpp>
 
 // Non-const range version
@@ -104,7 +104,7 @@ operator|(const SinglePassRange& rng, const add_value_holder<ValueType>& holder)
 
 #### Step 4: Verifying the Implementation
 The custom adaptor can now be used in the same manner as `boost::adaptors::transformed`.
-```
+```cpp
 #include <iostream>
 #include <vector>
 
@@ -132,7 +132,7 @@ int main() {
 ```
 
 The full implementation looks like this:
-```
+```cpp
 #include <iostream>
 #include <vector>
 #include <boost/iterator/iterator_adaptor.hpp>
