@@ -1,20 +1,20 @@
 # std::function
 The ```std::function``` (defined in the ```<functional>``` header) is a general-purpose polymorphic function wrapper that stores any functions, lambdas, functors, or member functions that matches a specific signature. It is versatile and safer than raw function pointers. If no target is present, the wrapper is "empty," and calling it throws a ```std::bad_function_call``` exception.
 It is declared as:
-```
+```cpp
 std::function<return_type(parameter_types)> func_name;
 ```
 A function is then assigned to it:
-```
+```cpp
 func_name = myFunction;
 ```
 It is invoked like a regular function
-```
+```cpp
 func_name(/* ... */);
 ```
 
 For example,
-```
+```cpp
 #include <iostream>
 #include <functional>
 
@@ -41,7 +41,7 @@ Unlike ```std::function```, it cannot allocate dynamic memory and store a copy o
 Returning a ```std::function_ref``` from a function or storing it in a class member when it points to a local or temporary object will cause a dangling reference and undefined behavior.
 
 The syntax for ```std::function_ref``` follows the standard function signature template format:
-```
+```cpp
 #include <functional>
 
 // Basic signature
@@ -51,7 +51,7 @@ std::function_ref<void(int)> func;
 Function pointers, free functions, raw function references, lambdas, and functors can be passed to a ```std::function_ref```. The ```std::function_ref``` can be used in a manner similar to ```std::function```. But unlike ```std::function```, a ```std::function_ref``` cannot be empty. It must be initialized with a valid callable upon creation.
 
 For example,
-```
+```cpp
 #include <iostream>
 #include <functional> // Required for std::function_ref (C++26)
 
@@ -78,7 +78,7 @@ int main() {
 ```
 
 The ```std::function_ref``` guarantees avoids memory allocation, making it unsuitable for owning complex, potentially large callable objects or stateful lambdas. If a ```std::function_ref``` is constructed from a temporary object (e.g., a stateless lambda), it results in undefined behavior when it is called because it will be referencing a dangling object.
-```
+```cpp
 // DANGER: UNDEFINED BEHAVIOR
 void risky_func() {
     function_ref<void()> fr = []{ std::cout << "Dangling reference!"; }; // fr refers to a temporary
