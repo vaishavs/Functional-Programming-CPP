@@ -25,7 +25,7 @@ and the member types:
 
 #### Step 1: Creating a Custom Container
 The first step involves creating a container that contains `begin()` and `end()` iterators.
-```
+```cpp
 #include <vector>
 
 // Fixed-capacity ring buffer — acts as a range automatically.
@@ -48,7 +48,7 @@ For types that *cannot be modified*, such as C structs, third-party classes, leg
 * `range_end`
 
 For example:
-```
+```cpp
 #include <boost/range.hpp>
 #include <iterator>         // for std::iterator_traits, std::distance()
 
@@ -88,7 +88,7 @@ To fully integrate the unmodifiable/user-defined type with Boost, the metafuncti
 * `boost::range_mutable_iterator`
 * `boost::range_const_iterator`
 
-```
+```cpp
 #include <boost/range.hpp>
 #include <iterator>         // for std::iterator_traits, std::distance()
 
@@ -109,7 +109,7 @@ namespace boost
 ```
 Now, this type can be used with adaptors and algorithms as usual.
 
-```
+```cpp
 #include <boost/range.hpp>
 #include <iterator>         // for std::iterator_traits, std::distance()
 
