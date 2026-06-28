@@ -277,7 +277,7 @@ auto ap(const std::shared_ptr<F>& pf, const std::shared_ptr<T>& px)
 // pure_ptr(x) == std::make_shared<T>(x)
 ```
 
-This gives you "combine several maybe-present values" semantics — the classic motivation usually shown with `optional`, here delivered by a different box. Note its character: it **short-circuits** to empty on the first missing input. (Hold that thought; §5 builds a box that deliberately does *not* short-circuit.)
+This gives you "combine several maybe-present values" semantics — the classic motivation usually shown with `optional`, here delivered by a different box. Note its character: it **short-circuits** to empty on the first missing input.
 
 #### 4. Writer
 
@@ -364,67 +364,7 @@ auto combined = combineFuture(std::move(fa), std::move(fb),
                               [](auto a, auto b){ return merge(a, b); });
 ```
 
-The crucial observation: `fa` and `fb` **do not depend on each other**, so they overlap in time. A *monadic* version (`fa.then([](A a){ return makeFutureB(a); })`) could only create the second future *after* the first finished — forcing them to run **in sequence**. That contrast is the whole point of the next section.
-
-#### 7. Validation
-This is the example that makes people care about applicatives. A monadic error type (like the std maybe/either boxes) **short-circuits**: the moment one step fails, the rest are skipped, so you learn about **one** error at a time. A form with five bad fields makes the user fix-and-resubmit five times.
-
-An applicative-only `Validation` box instead **collects every error**, because `ap` always inspects *both* sides before deciding:
-
-```cpp
-#include <variant>
-#include <vector>
-#include <string>
-
-template <typename T>
-struct Validation {
-    std::variant<std::vector<std::string>, T> v;   // index 0 = errors, 1 = value
-    bool ok() const { return v.index() == 1; }
-    const T& get() const { return std::get<1>(v); }
-    const std::vector<std::string>& errs() const { return std::get<0>(v); }
-};
-
-template <typename T> Validation<T> valid(T x) {
-    return { std::variant<std::vector<std::string>, T>(std::in_place_index<1>, std::move(x)) };
-}
-
-// Combine two validations with a binary function — accumulating errors from BOTH.
-template <typename F, typename A, typename B>
-auto validate2(F f, const Validation<A>& a, const Validation<B>& b)
-    -> Validation<std::invoke_result_t<F, A, B>>
-{
-    using R = std::invoke_result_t<F, A, B>;
-    if (a.ok() && b.ok())
-        return valid<R>(f(a.get(), b.get()));
-
-    std::vector<std::string> all;                  // gather everything
-    if (!a.ok()) all.insert(all.end(), a.errs().begin(), a.errs().end());
-    if (!b.ok()) all.insert(all.end(), b.errs().begin(), b.errs().end());
-    return Validation<R>{ std::move(all) };
-}
-```
-
-```cpp
-struct User { std::string name; int age; };
-auto err = [](std::string m){ return std::vector<std::string>{ std::move(m) }; };
-
-Validation<std::string> checkName(std::string n) {
-    if (n.empty()) return Validation<std::string>{ err("name is empty") };
-    return valid(std::move(n));
-}
-Validation<int> checkAge(int a) {
-    if (a < 0) return Validation<int>{ err("age is negative") };
-    return valid(a);
-}
-
-auto makeUser = [](std::string n, int a){ return User{std::move(n), a}; };
-
-auto good = validate2(makeUser, checkName("Ada"), checkAge(36));  // ok: User{"Ada", 36}
-auto bad  = validate2(makeUser, checkName(""),    checkAge(-1));  // invalid
-// bad.errs() == { "name is empty", "age is negative" }   ← BOTH reported at once
-```
-
-> This is precisely what a short-circuiting monad (e.g. `std::expected` chained with `and_then`) **cannot** do: it would stop at `"name is empty"` and never check the age. `Validation` reports both because `ap` is non-sequential — it never lets one box's failure prevent it from examining the other. The price: `Validation` is **applicative but not a monad** (a lawful `bind` would reintroduce short-circuiting). The "weakness" *is* the feature.
+The crucial observation: `fa` and `fb` **do not depend on each other**, so they overlap in time.
 
 ## Drawbacks
 * C++ has no higher-kinded types, so — exactly as with functors — there is no standard `Applicative` interface and no way to write one constraint over "all boxes." 
