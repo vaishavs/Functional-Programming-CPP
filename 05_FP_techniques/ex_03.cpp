@@ -1,18 +1,15 @@
 // Build & run (needs C++20 for concepts):
 //   g++ -std=c++20 -O2 box_functor.cpp -o box_functor && ./box_functor
 //
-// Eight "boxes," one shared idea: each has a member `transform` that maps the
-// contents (T -> U) while leaving the box's *shape* untouched. A single free
-// helper `map_over` works over all of them via one concept.
+// Eight "boxes," one shared idea: each has a member `transform` that maps the contents (T -> U) while
+// leaving the box's *shape* untouched. A free helper `traced` maps + prints over all of them via one concept.
 
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
-#include <utility>
 #include <concepts>
 #include <functional>
-#include <type_traits>
 
 // The inner type produced by applying F to a (const) T. Used by every
 // transform below, so the long std::invoke_result_t spelling appears once.
@@ -104,8 +101,7 @@ struct Both {
 };
 
 // =====================================================================
-// 5. Tagged — a value carrying an untouched tag alongside it.
-//                                             flavor: keyed context (Writer seed)
+// 5. Tagged — a value with an untouched tag. flavor: keyed context (Writer seed)
 // Shape preserved = the tag; only the value channel is mapped.
 // =====================================================================
 template <typename C, typename T>
@@ -183,8 +179,7 @@ struct Lazy {
 };
 
 // =====================================================================
-// 8. Reader — a value computed on demand from an input R.
-//                                             flavor: dependency on an input
+// 8. Reader — a value computed on demand from an input R. flavor: input dependency
 // The box is itself R -> T; mapping composes f after it, giving R -> U.
 // (No operator<< — a Reader needs an input before it has anything to show.)
 // =====================================================================
@@ -201,28 +196,26 @@ struct Reader {
 };
 
 // =====================================================================
-// The pattern is per-type: there is no shared base every box derives from.
-// A C++20 concept *describes* the common surface so one helper covers
-// anything with a member transform that compiles.
+// A C++20 concept *describes* the common surface so the free helper below can
+// accept any box with a member transform. (Per-type pattern: no shared base.)
 // =====================================================================
 template <typename Fa, typename Func>
 concept Transformable = requires(Fa fa, Func f) {
-    { fa.transform(f) };
+    fa.transform(f);                         // simple-requirement: must compile
 };
 
-template <typename Fa, typename Func>
-    requires Transformable<Fa, Func>
-auto map_over(Fa&& fa, Func&& f) {
-    return std::forward<Fa>(fa).transform(std::forward<Func>(f));
+// map_over + trace, in one: apply the box's transform, print "before  ->  after",
+// and return the result so calls chain. (Streamable boxes only; see Reader / the laws,
+// which call .transform directly.)
+template <typename Fa, typename Func> requires Transformable<Fa, Func>
+auto traced(const Fa& fa, const Func& f) {
+    auto out = fa.transform(f);
+    std::cout << fa << "  ->  " << out << '\n';
+    return out;
 }
 
-// One printer for anything streamable (every box's friend operator<< qualifies,
-// and because they stream into os recursively, boxes nest for free).
-template <typename T>
-void print(const T& x) { std::cout << x << '\n'; }
-
-// Render any streamable box to text via operator<<. With no operator== on the
-// boxes, the functor laws are checked by comparing these renderings.
+// Render any streamable box to text via operator<<.
+// The functor laws are checked by comparing these renderings.
 template <typename T>
 std::string show(const T& x) {
     std::ostringstream os;
@@ -244,27 +237,26 @@ int main() {
     Lazy<int>                z { [] { return 21; } };
     Reader<std::string, int> len { [](const std::string& s) { return (int)s.size(); } };
 
-    std::cout << "-- one map_over + one function, every box keeps its shape --\n";
-    print(map_over(a, times_ten));   // Box(50)
-    print(map_over(b, times_ten));   // Maybe(70)
-    print(map_over(c, times_ten));   // Maybe(empty)          <- emptiness preserved
-    print(map_over(d, times_ten));   // Many[10, 20, 30]
-    print(map_over(e, times_ten));   // Both(40, 90)
-    print(map_over(g, times_ten));   // Tagged{celsius = 1000}     <- tag untouched
-    print(map_over(t, times_ten));   // Tree 10(20(40) 30)         <- topology preserved
-    print(map_over(z, times_ten));   // Lazy(forced -> 210)        <- runs at force time
-    std::cout << "Reader(\"hello\" -> " << map_over(len, times_ten)("hello") << ")\n"; // 50
+    std::cout << "-- before  ->  after : one helper + one function, every box keeps its shape --\n";
+    traced(a, times_ten);   // Box(5)  ->  Box(50)
+    traced(b, times_ten);
+    traced(c, times_ten);   // empty stays empty
+    traced(d, times_ten);
+    traced(e, times_ten);
+    traced(g, times_ten);   // tag untouched
+    traced(t, times_ten);   // topology preserved
+    traced(z, times_ten);   // both sides forced at print time
+    std::cout << "Reader(\"hello\")  " << len("hello") << "  ->  " << len.transform(times_ten)("hello") << '\n';
 
     // transform may also CHANGE the inner type (int -> string),
     // while the box kind / structure stays exactly the same.
     auto to_label = [](int x) { return std::string("#") + std::to_string(x); };
 
     std::cout << "\n-- contents change type, box kind does not --\n";
-    print(map_over(e, to_label));    // Both(#4, #9)
-    print(map_over(g, to_label));    // Tagged{celsius = #100}
-    print(map_over(t, to_label));    // Tree #1(#2(#4) #3)
+    traced(e, to_label);    // Both(4, 9)  ->  Both(#4, #9)
+    traced(g, to_label);
+    traced(t, to_label);
 
-    // ---------------- the two functor laws ----------------
     auto id        = [](auto x) { return x; };
     auto add_one   = [](int x) { return x + 1; };
     auto times_two = [](int x) { return x * 2; };
@@ -272,39 +264,37 @@ int main() {
 
     std::cout << std::boolalpha;
 
-    // Law 1: transform(id) leaves the box unchanged.
-    // No operator== on the boxes — compare their operator<< renderings instead.
+    // Apply a given law to every box once, so the box list lives in a single place.
+    auto for_each_box = [&](auto law) {
+        law("Box   ", a);
+        law("Maybe ", b);
+        law("Many  ", d);
+        law("Both  ", e);
+        law("Tagged", g);
+        law("Tree  ", t);
+    };
+
+    // Law 1: transform(id) leaves the box unchanged (silent — calls .transform directly).
     auto identity_law = [&](const char* name, const auto& box) {
-        std::cout << "  " << name << " : " << (show(map_over(box, id)) == show(box)) << "\n";
+        std::cout << "  " << name << " : " << (show(box.transform(id)) == show(box)) << "\n";
     };
     std::cout << "\n-- Law 1, identity: transform(id) == id --\n";
-    identity_law("Box   ", a);
-    identity_law("Maybe ", b);
-    identity_law("Many  ", d);
-    identity_law("Both  ", e);
-    identity_law("Tagged", g);
-    identity_law("Tree  ", t);
+    for_each_box(identity_law);
 
     // Law 2: mapping f then g equals mapping (g ∘ f) in a single pass.
     auto compose_law = [&](const char* name, const auto& box) {
         std::cout << "  " << name << " : "
-                  << (show(map_over(map_over(box, add_one), times_two)) == show(map_over(box, fused))) << "\n";
+                  << (show(box.transform(add_one).transform(times_two)) == show(box.transform(fused))) << "\n";
     };
     std::cout << "\n-- Law 2, composition: transform(f) then transform(g) == transform(g.f) --\n";
-    compose_law("Box   ", a);
-    compose_law("Maybe ", b);
-    compose_law("Many  ", d);
-    compose_law("Both  ", e);
-    compose_law("Tagged", g);
-    compose_law("Tree  ", t);
+    for_each_box(compose_law);
 
-    // Lazy and Reader hold deferred computations; run them (force / apply)
-    // and compare the resulting values directly.
+    // Lazy and Reader hold deferred computations; run them (force / apply) and compare the resulting values directly.
     std::cout << "\n-- same laws, observed for the function-style boxes --\n"
               << "  Lazy   : "
-              << (map_over(map_over(z, add_one), times_two).force() == map_over(z, fused).force()) << "\n"
+              << (z.transform(add_one).transform(times_two).force() == z.transform(fused).force()) << "\n"
               << "  Reader : "
-              << (map_over(map_over(len, add_one), times_two)("hello") == map_over(len, fused)("hello")) << "\n";
+              << (len.transform(add_one).transform(times_two)("hello") == len.transform(fused)("hello")) << "\n";
 
     return 0;
 }
