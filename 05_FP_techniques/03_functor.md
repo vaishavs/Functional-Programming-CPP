@@ -15,7 +15,7 @@ A functor doesn't just lift *values* into boxes; it lifts **functions** into the
                             ▼                         ▼
    box world:   transform(f) : F<T> ───────────────▶ F<U>
 ```
-Suppose there is a plain value and a plain function:
+Suppose there is a plain value and a plain function, something like:
 
 ```cpp
 int n = 7;
@@ -31,7 +31,7 @@ Easy. But real programs rarely hand out bare values. Values come *wrapped* in co
 - A value sitting behind a **pointer** that may or may not own anything.
 - A value that is obtained only by **running a computation** given some input.
 
-Each "context" is a kind of box. The annoying-but-tempting approach is to *open* every box, pull the value out, apply that plain function, and put the result back in a new box — by hand, every single time, for every box shape. That is repetitive and error-prone.
+Each "context" is a kind of box. The annoying-but-tempting approach is to *open* every box, pull the value out, apply the plain function, and put the result back in a new box — by hand, every single time, for every box shape. That is repetitive and error-prone.
 
 The functor pattern says: each box shape provides **one** operation — be it `transform` (or `map` or `fmap`) — that does the open/apply/re-box process *internally*, correctly, every time.
 
