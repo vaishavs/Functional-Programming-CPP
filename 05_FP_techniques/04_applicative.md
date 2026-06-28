@@ -113,7 +113,7 @@ The two readings force two different `pure`s, and the reason is the identity law
 
 #### The function family
 
-`Reader` is the family of functions from a fixed environment `R` — a value you don't have yet, but will once you supply an `R`. `pure x` is the constant function that ignores its input and returns `x`; the product hands the *same* `r` to both functions and pairs their results:
+`Reader` is the family of functions from a fixed environment `R` — a value that is not available yet, but will once an `R` is supplied. The `pure x` is the constant function that ignores its input and returns `x`; the product hands the *same* `r` to both functions and pairs their results:
 
 ```cpp
 auto product = [f, g](R r){ return std::pair{ f(r), g(r) }; };
@@ -123,8 +123,8 @@ In C++ this needs no library type at all — a lambda or `std::function<T(R)>` i
 
 #### The monoid family — Writer and Const
 A monoid is just a type that comes with two things:
-1. **A way to combine two values into one** — call it `⊕`. It has to be associative: `(a ⊕ b) ⊕ c` equals `a ⊕ (b ⊕ c)`.
-2. **An "identity" value** — a do-nothing element where combining with it changes nothing: `identity ⊕ x == x` and `x ⊕ identity == x`.
+- **A way to combine two values into one** — call it `⊕`. It has to be associative: `(a ⊕ b) ⊕ c` equals `a ⊕ (b ⊕ c)`.
+- **An "identity" value** — a do-nothing element where combining with it changes nothing: `identity ⊕ x == x` and `x ⊕ identity == x`.
 
 Some common monoids:
 | Type | combine `⊕` | identity |
@@ -221,7 +221,7 @@ auto lift2(Bin f, const Box<A>& a, const Box<B>& b) {
 auto sum = lift2([](int x, int y){ return x + y; }, Box<int>{2}, Box<int>{3}); // Box<int>{5}
 ```
 
-`lift2` (and its siblings `lift3`, `lift4`, …) is the ergonomic face of `ap`. In real C++ you'll reach for a `liftN`/`zip_with` far more often than raw `ap` — but every `liftN` *is* `ap` underneath. (Formally, `lift2(f, a, b) == ap(map(f, a), b)`.)
+`lift2` (and its siblings `lift3`, `lift4`, …) is the ergonomic face of `ap`. Every `liftN` *is* `ap` underneath. (Formally, `lift2(f, a, b) == ap(map(f, a), b)`.)
 
 #### 2. Cartesian product
 Applying a list of functions to a list of values applies every function to every value:
@@ -368,5 +368,5 @@ The crucial observation: `fa` and `fb` **do not depend on each other**, so they 
 
 ## Drawbacks
 * C++ has no higher-kinded types, so — exactly as with functors — there is no standard `Applicative` interface and no way to write one constraint over "all boxes." 
-* `pure` is return-type-polymorphic, which C++ can't express directly. In C++, the target box must be named: `pure_box`, `pure_vec`, `make_shared`, `valid`, a ready `future`, etc. You generally write a per-box `pure` (and often pass the box type as a template argument when context can't supply it).
+* `pure` is return-type-polymorphic, which C++ can't express directly. In C++, the target box must be named: `pure_box`, `pure_vec`, `make_shared`, `valid`, a ready `future`, etc. Generally, a per-box `pure` is written (and often the box type is passed as a template argument when context can't supply it).
 * Some `pure`s want laziness (ZipList's infinite `repeat`), which a finite eager container can't provide — hence `std::views::repeat`.
