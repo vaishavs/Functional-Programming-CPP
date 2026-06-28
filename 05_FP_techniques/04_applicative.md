@@ -208,7 +208,7 @@ auto map(F f, const Box<T>& bx) { return ap(pure_box(f), bx); }   // map = ap �
 auto squared = map([](int x){ return x * x; }, Box<int>{3});       // Box<int>{9}
 ```
 
-**Build the operation you'll actually use** — `lift2`, "apply a binary function across two boxes":
+**Build the operation** — `lift2`, "apply a binary function across two boxes":
 
 ```cpp
 template <typename Bin, typename A, typename B>
@@ -277,7 +277,7 @@ auto ap(const std::shared_ptr<F>& pf, const std::shared_ptr<T>& px)
 // pure_ptr(x) == std::make_shared<T>(x)
 ```
 
-This gives you "combine several maybe-present values" semantics — the classic motivation usually shown with `optional`, here delivered by a different box. Note its character: it **short-circuits** to empty on the first missing input.
+This gives the "combine several maybe-present values" semantics — the classic motivation usually shown with `optional`, here delivered by a different box. Note its character: it **short-circuits** to empty on the first missing input.
 
 #### 4. Writer
 
@@ -311,7 +311,7 @@ Lesson: **applicative-ness can carry an algebraic prerequisite.** `pair` shows t
 
 #### 5. Reader
 
-Recall from the functor guide that a function `R(X)` is itself a box ("an `R` for every environment `X`"). As an *applicative*, `ap` feeds the **same environment** to both the boxed-function and the boxed-value, then applies one to the other:
+A function `R(X)` is itself a box ("an `R` for every environment `X`"). As an *applicative*, `ap` feeds the same environment to both the boxed-function and the boxed-value, then applies one to the other:
 
 ```
    (f <*> g)(x)  =  f(x)( g(x) )        both f and g receive the SAME x
@@ -337,7 +337,7 @@ auto greet = combineReader(
 auto line = greet(Config{"Ada", 36});              // "Ada is 36"
 ```
 
-This is how you assemble many computations that each read from a shared configuration/context and combine their results — without threading the context through by hand. The "effect" the Reader applicative adds is *dependence on an ambient environment*.
+This is how many computations are assembled that each read from a shared configuration/context and combine their results — without threading the context through by hand. The "effect" the Reader applicative adds is *dependence on an ambient environment*.
 
 #### 6. Async
 
