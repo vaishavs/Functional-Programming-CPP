@@ -6,7 +6,25 @@ The operation every functor must provide looks like this:
 ```
 transform : (A → B)  applied to  F<A>   yields   F<B>
 ```
+In C++, it looks something like this:
+```cpp
+template<
+    template<typename> class Context,
+    typename Function,
+    typename Input
+>
+auto transform(Function fn, Context<Input> value);
 
+```
+Usage example:
+```cpp
+Context<int> value;
+
+auto result = transform(
+    [](int x) { return std::to_string(x); },
+    value
+);
+```
 A functor doesn't just lift *values* into boxes; it lifts **functions** into the "box world."
 
 ```
@@ -14,6 +32,12 @@ A functor doesn't just lift *values* into boxes; it lifts **functions** into the
                             │ transform               │ transform
                             ▼                         ▼
    box world:   transform(f) : F<T> ───────────────▶ F<U>
+```
+Meaning:
+```
+Function: Input -> Output
+
+Context<Input> -> Context<Output>
 ```
 Suppose there is a plain value and a plain function, something like:
 
