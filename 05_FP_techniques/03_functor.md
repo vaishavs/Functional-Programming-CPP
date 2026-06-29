@@ -14,7 +14,8 @@ template<
     typename Input
 >
 auto transform(Function fn, Context<Input> value);
-
+// Function fn is defined as:
+// [](Input x) -> Output { ... }
 ```
 Usage example:
 ```cpp
