@@ -64,6 +64,20 @@ The `pure(x)` builds the *simplest possible* box containing `x`. It adds a value
                               │    F<int>   │
                               └─────────────┘
 ```
+In C++, this is what it looks like:
+```cpp
+// Lift a value into the context.
+template<
+    template<typename> class Context,
+    typename T
+>
+auto pure(T value);
+```
+Meaning:
+```
+T → Context<T>
+```
+
 #### `ap` (written `<*>`) — apply a boxed function to a boxed value
 ```
  ap : F<(B → C)>  and  F<B>   yields   F<C>
@@ -78,7 +92,25 @@ The `pure(x)` builds the *simplest possible* box containing `x`. It adds a value
    └───────────────┘       └───────────────┘          └───────────────┘
        boxed fn                boxed value                boxed result
 ```
-
+In C++, this is what it looks like:
+```cpp
+// Apply a wrapped function to a wrapped value.
+template<
+    template<typename> class Context,
+    typename Function,
+    typename Input
+>
+auto apply(
+    Context<Function> wrappedFunction,
+    Context<Input> wrappedValue
+);
+```
+Meaning:
+```
+Context<(Input -> Output)> + Context<Input>
+                          ↓
+                     Context<Output>
+```
 ## The laws  
 An applicative must satisfy four laws, the analogues of the functor laws one level up. 
 1. *Identity*: `ap(pure(id), v) = v`. It adds no structure beyond holding a value.
