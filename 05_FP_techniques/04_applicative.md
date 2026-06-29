@@ -136,8 +136,6 @@ There's no standard-library type for it, and that's expected: a wrapper that doe
 #### The failure / error family
 These boxes hold either a value or an indication that something went wrong, and the family is defined by what the product does when something *has* gone wrong. `std::optional<T>` (the "Maybe" shape) collapses to `nullopt` the moment either operand is empty: combining two values requires both to be present, so a single absence is enough to sink the result. `std::expected<T,E>` behaves the same way but carries a payload describing the failure — when an operand holds an error, that error becomes the result, and the first one encountered is the one that propagates.
 
-What makes this family worth studying is that the same data shape admits a *second*, equally lawful product. Instead of stopping at the first problem, you can choose to gather every problem.
-
 #### The shape family
 This is a single range type that supports two different products. Reading "combine" as *align by position*, the product is `views::zip` — walk both ranges in lockstep and pair element by element. Reading it as *multiply*, the product is `views::cartesian_product` — pair every element of the first with every element of the second.
 
