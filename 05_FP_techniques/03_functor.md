@@ -22,7 +22,7 @@ Meaning:
 transform:    (Input -> Output)            -> Context<Input> -> Context<Output>
                    no Context
 ```
-The function is bare: `Input -> Output`. Nothing is wrapped. 
+The function is bare: `Input -> Output`. It is not wrapped.
 
 Usage example:
 ```cpp
