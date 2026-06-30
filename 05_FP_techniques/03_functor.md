@@ -148,6 +148,13 @@ transform(g) ∘ transform(f)   ==   transform(g ∘ f)
 ```
 In words: two passes can be fused into one and get the same answer. This is what lets compilers and range pipelines optimize chains of maps, and it to see `box.transform(f).transform(g)` as a single conceptual step.
 
+In C++:
+```cpp
+#include <functional>   // std::identity (C++20)
+
+// Identity:     o.transform(std::identity{})            ≡  o
+// Composition:  o.transform(f).transform(g)             ≡  o.transform([&](auto x){ return g(f(x)); })
+```
 These laws can be visualized as a **commuting square**.
 
 ```
