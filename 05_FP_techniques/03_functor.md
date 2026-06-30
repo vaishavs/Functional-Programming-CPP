@@ -41,14 +41,8 @@ A functor doesn't just lift *values* into boxes; it lifts **functions** into the
                             ▼                         ▼
    box world:   transform(f) : F<T> ───────────────▶ F<U>
 ```
-Meaning:
-```
-Function: Input -> Output
 
-Context<Input> -> Context<Output>
-```
 Suppose there is a plain value and a plain function, something like:
-
 ```cpp
 int n = 7;
 auto f = [](int x) { return x * 2; };
