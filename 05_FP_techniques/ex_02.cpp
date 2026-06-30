@@ -63,18 +63,24 @@ int main() {
 
     // FUNCTOR: the lambda is a plain int->int; map runs it inside the box.
     //          5  --(*2)-->  Box<int>{10}
-    auto res_map = numberBox.map([](int num){ return num * 2; }).value;
+    auto res_map = numberBox.map(
+        [](int num){ return num * 2; }
+    ).value;
     std::cout << res_map << '\n';        // 10
 
     // APPLICATIVE: the unary '+' turns the capture-less lambda into a function
     //              pointer int(*)(int), so the box holds a concrete callable and
     //              CTAD deduces Box<int(*)(int)>. .ap(numberBox) applies that
     //              boxed function to the boxed value:  f(5) = 105.
-    auto res_ap = Box{+[](int num){ return num + 100; }}.ap(numberBox).value;
+    auto res_ap = Box{
+        +[](int num){ return num + 100; }
+    }.ap(numberBox).value;
     std::cout << res_ap << '\n';  // 105
 
     // MONAD: the lambda returns a *box* (Box<int>{num*num}); bind flattens it,
     //        so the result is Box<int>{25}, not Box<Box<int>>.
-    auto res_bind = numberBox.bind([](int num){ return Box{num * num}; }).value;
+    auto res_bind = numberBox.bind(
+        [](int num){ return Box{num * num}; }
+    ).value;
     std::cout << res_bind << '\n'; // 25
 }
