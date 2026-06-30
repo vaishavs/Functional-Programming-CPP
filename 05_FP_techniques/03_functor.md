@@ -17,6 +17,13 @@ auto transform(Function fn, Context<Input> value);
 // Function fn is defined as:
 // [](Input x) -> Output { ... }
 ```
+Meaning:
+```
+transform:    (Input -> Output)            -> Context<Input> -> Context<Output>
+                   no Context
+```
+The function is bare: `Input -> Output`. Nothing is wrapped. 
+
 Usage example:
 ```cpp
 Context<int> value;
