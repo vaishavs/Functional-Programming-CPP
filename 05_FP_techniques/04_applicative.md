@@ -27,6 +27,20 @@ That missing operation is exactly **`ap`**:
 ```
  ap : F<(B → C)>  and  F<B>   yields   F<C>      ← exactly what closes the gap
 ```
+For example:
+```
+   ┌───┬───┬───┐     ┌────┬────┬────┐
+   │ 1 │ 2 │ 3 │     │ 10 │ 20 │ 30 │      function: (+)
+   └───┴───┴───┘     └────┴────┴────┘
+        │                  │
+        └────── combine ───┘
+                  │
+                  ▼
+          ┌────┬────┬────┐
+          │ 11 │ 22 │ 33 │
+          └────┴────┴────┘
+   two boxes joined position-by-position into one box
+```
 The signature of `ap` against `transform` is:
 ```
    Functor transform :   (A → B)   →   F<A>   →   F<B>
@@ -37,7 +51,7 @@ The signature of `ap` against `transform` is:
                          └─ box ─┘      box        box
                          the function is INSIDE a box too
 ```
-In fact, an applicative can combine **any number** of independent boxes. 
+In fact, an applicative can combine **any number** of independent boxes.
 ## Components of an applicative
 An applicative provides:
 
@@ -106,7 +120,7 @@ Meaning:
 apply:   Context<Input -> Output>     -> Context<Input> -> Context<Output>
         └─ Context on the function ─┘
 ```
-The *function* itself is wrapped: `Context<Input -> Output>`. This is the one extra wrapper that defines an applicative.
+The *function* itself is wrapped: `Context<Input -> Output>`. It is boxed (inside). This is the one extra wrapper that defines an applicative.
 ## The laws  
 An applicative must satisfy four laws, the analogues of the functor laws one level up. 
 1. *Identity*: `ap(pure(id), v) = v`. It adds no structure beyond holding a value.
