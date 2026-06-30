@@ -1,7 +1,6 @@
 ## What applicative adds to functor  
 An applicative combines several boxes whose structure is fixed in advance and when the computations don't depend on each other's results.
 
-
 A functor provides one operation, `transform`, which lifts a *unary* function over a *single* box. An applicative adds two operations and, with them, the ability to lift an *n-ary* function over *n* boxes.  
 The two additions are pure (inject a plain value into the minimal context, `A → F<A>`) and `ap` (apply a *boxed* function to a *boxed* value).
 
@@ -28,14 +27,6 @@ That missing operation is exactly **`ap`**:
 ```
  ap : F<(B → C)>  and  F<B>   yields   F<C>      ← exactly what closes the gap
 ```
-```
-   F<(A → B)>          F<A>                          F<B>
-   ┌──────────┐      ┌──────┐                      ┌────────┐
-   │   (f)    │  ⊛   │  a   │  ───────────────────►│  f(a)  │
-   └──────────┘      └──────┘                      └────────┘
-       a boxed         a boxed                       boxed
-      function          value                        result
-```
 The signature of `ap` against `transform` is:
 ```
    Functor transform :   (A → B)   →   F<A>   →   F<B>
@@ -50,20 +41,15 @@ In fact, an applicative can combine **any number** of independent boxes.
 ## Components of an applicative
 An applicative provides:
 
-#### `pure` (also called `unit` or `lift`) — put a naked value into a box
-
+#### `pure` (also called `unit` or `lift`) — wraps a value
+This is the simplest operation. It takes one ordinary value and puts it in the box. It is the "minimal, do-nothing" way to enter the box: it adds the box's structure but no extra effect (no second list element, no error, no log).
 ```
-pure : A   yields   F<A>
+   plain value          boxed value
+   ┌─────┐              ┌─────────┐
+   │  5  │  ── pure ──► │ [  5  ] │
+   └─────┘              └─────────┘
 ```
-The `pure(x)` builds the *simplest possible* box containing `x`. It adds a value but adds *no extra structure*. is the "minimal, do-nothing" way to enter the box: it adds the box's structure but no extra effect (no second list element, no error, no log).
-```
-        3                     ┌─────────────┐
-   (naked value)   pure ──▶   │  ╔═══════╗  │
-                              │  ║   3   ║  │
-                              │  ╚═══════╝  │
-                              │    F<int>   │
-                              └─────────────┘
-```
+That's the whole operation: bare value in, box out.
 In C++, this is what it looks like:
 ```cpp
 // Lift a value into the context.
@@ -78,9 +64,19 @@ Meaning:
 T → Context<T>
 ```
 
-#### `ap` (written `<*>`) — apply a boxed function to a boxed value
+#### `ap` (written `<*>`) — combine several boxes with one function
+This is the operation that defines an applicative. A functor (the level below) can only touch one box. An applicative combines several boxes at once using a function. The cleanest way to see it: multiple boxes go in, one function joins their contents, one box comes out. The function is supplied plainly and the two boxes after it; the contents are paired up and combined. Combining **more than one box** is the entire point of this operation — and the single thing that separates an applicative from a functor.
+
 ```
- ap : F<(B → C)>  and  F<B>   yields   F<C>
+ ap  :   F<A → B>   ×   F<A>   ──►   F<B>
+
+
+   F<A → B> ──┐
+              ├── ap ──►  F<B>
+   F<A>     ──┘
+              │
+        reach into both boxes, apply the function to the value,
+        put the result back in a box of the same kind F
 ```
 
 ```
@@ -90,7 +86,7 @@ T → Context<T>
    │  ╚═════════╝  │       │  ╚═════════╝  │          │  ╚═════════╝  │
    │  F<int→int>   │       │     F<int>    │          │     F<int>    │
    └───────────────┘       └───────────────┘          └───────────────┘
-       boxed fn                boxed value                boxed result
+   boxed fn F<A → B>               boxed value F<A>                boxed result
 ```
 In C++, this is what it looks like:
 ```cpp
