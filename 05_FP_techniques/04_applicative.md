@@ -103,10 +103,10 @@ auto apply(
 ```
 Meaning:
 ```
-Context<(Input -> Output)> + Context<Input>
-                          ↓
-                     Context<Output>
+apply:   Context<Input -> Output>     -> Context<Input> -> Context<Output>
+        └─ Context on the function ─┘
 ```
+The *function* itself is wrapped: `Context<Input -> Output>`. This is the one extra wrapper that defines an applicative.
 ## The laws  
 An applicative must satisfy four laws, the analogues of the functor laws one level up. 
 1. *Identity*: `ap(pure(id), v) = v`. It adds no structure beyond holding a value.
