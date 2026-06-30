@@ -117,6 +117,54 @@ An applicative must satisfy four laws, the analogues of the functor laws one lev
 2. *Homomorphism*: `ap(pure(f), pure(x)) = pure(f(x))` — applying a pure function to a pure argument is the same as doing the application on plain values and injecting the result. Pure-on-pure never manufactures any effect or extra structure.
 3. *Interchange*: when the value side is pure, the order of evaluation can be swapped. The law says a pure argument carries no effects, so it doesn't matter whether the effectful `u` or the pure `y` is considered to act first.
 4. *Composition*: `ap(ap(ap(pure(compose), u), v), w) = ap(u, ap(v, w))`. The law says combining the function-carrying boxes `u` and `v` first, then applying to `w`, agrees with applying in the nested order. Effects compose in one unambiguous order. But just like with functors, these are a contract the compiler never checks, and they presuppose pure functions.
+
+Consider a generic box type:
+```cpp
+template<class T>
+struct Box {
+    T value;
+};
+
+template<class T>
+Box<T> pure(T x) {
+    return {x};
+}
+
+template<class F, class T>
+auto ap(Box<F> f, Box<T> x) {
+    return Box{f.value(x.value)};
+}
+```
+And the helpers:
+```cpp
+auto id = [](auto x) { return x; };
+
+auto compose = [](auto f) {
+    return [=](auto g) {
+        return [=](auto x) {
+            return f(g(x));
+        };
+    };
+};
+```
+
+Then the four Applicative laws in simple terms are:
+```cpp
+// Identity
+ap(pure(id), x) == x;
+
+// Homomorphism
+ap(pure(f), pure(x)) == pure(f(x));
+
+// Interchange
+ap(u, pure(x)) == ap(pure([=](auto f){ return f(x); }), u);
+
+// Composition
+ap(ap(ap(pure(compose), u), v), w)
+==
+ap(u, ap(v, w));
+```
+
 ## Types of applicatives
 To call a box an "applicative", two tools are needed:
 * Wrap — take a plain value and put it in the box.
