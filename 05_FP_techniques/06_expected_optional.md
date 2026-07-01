@@ -3,7 +3,7 @@ For much of its history, C++ offered no clean way to represent non-existent valu
 
 This is the problem that `std::optional` and, later, `std::expected` were designed to solve. Neither type introduces new computational power to the language; nothing achievable with them was previously impossible. Instead, they introduce clarity. They take an implicit, easily forgotten possibility and turn it into an explicit part of a function's signature, one that the type system itself insists be acknowledged before the underlying value can be touched.
 
-## std::optional (since C++17)
+## `std::optional` (since C++17)
 
 `std::optional<T>` represents a value of type `T` that may be present, or it may not be. That is the entire premise. It does not explain why a value might be missing, nor does it distinguish between different kinds of absence. It simply acknowledges that absence is possible and asks the calling code to check before proceeding.
 
@@ -45,7 +45,7 @@ This makes `optional` a natural fit wherever a function's result is legitimately
 
 But `optional`'s narrative has a limit. It can say that something is missing, but it cannot say why. If a function might fail for several distinct reasons, `optional` collapses all of them into the same undifferentiated emptiness. It also carries a small cost, usually the overhead of one extra byte or word to track whether a value is present, with some specializations like `optional<bool>` handling this internal bookkeeping with additional care.
 
-## std::expected (since C++23)
+## `std::expected` (since C++23)
 
 Where `std::optional` speaks only of presence and absence, `std::expected<T, E>`, speaks of success and failure, and it insists on explaining the failure when it happens. An `expected<T, E>` object holds either a value of type `T`, representing success, or an error of type `E`, representing a specific, describable reason things went wrong. This is the natural next chapter in the story: once a program acknowledges that operations can fail, the next question is inevitably why, and `expected` exists to answer it.
 
@@ -95,11 +95,11 @@ This makes `std::expected` well suited to situations where failure is not an exc
 
 Yet `std::expected`'s more elaborate plot comes with its own costs. As of mid-2026, C++23 support is still not universal across compilers and standard libraries, so its availability cannot always be assumed. Choosing and consistently handling an appropriate error type also requires more upfront design than the simple presence-or-absence model of `std::optional`. And like its predecessor, `std::expected` is not meant to replace exceptions altogether; catastrophic, unrecoverable conditions, such as running out of memory, still belong to the older, more dramatic tradition of exception handling.
 
-## Conclusion
+## Comparison
 
 Told side by side, the two types form a natural progression rather than a competition. `std::optional` answers the simplest possible question: does a value exist? `expected` answers a more detailed one: if something went wrong, what exactly happened? Neither is meant to dominate the other, and neither is meant to replace exceptions, which remain the appropriate mechanism for truly exceptional, program-halting conditions.
 
-| Aspect | std::optional | std::expected |
+| Aspect | `std::optional` | `std::expected` |
 |---|---|---|
 | Represents | Value or nothing | Value or error with details |
 | Introduced | C++17 | C++23 |
@@ -111,7 +111,7 @@ The choice between them comes down to how much explanation a failure deserves. W
 
 What unites both types, ultimately, is a shift in philosophy: rather than trusting a programmer to remember an implicit convention, null pointers that might be dereferenced, sentinel values that might be misread, or exceptions used for entirely ordinary outcomes, the type system itself becomes a participant in the story, insisting that missing values and failed operations be acknowledged before the program is allowed to proceed.
 
-## std::optional and std::expected Together — Functor, Applicative, Monad
+## `std::optional` and `std::expected` Together — Functor, Applicative, Monad
 Consider a scenario: get an optional name, and an expected age (parsed from text, which can fail with a reason).
 
 ```cpp
