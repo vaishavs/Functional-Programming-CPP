@@ -52,7 +52,7 @@ The signature of `ap` against `transform` is:
                          the function is INSIDE a box too
 ```
 In fact, an applicative can combine **any number** of independent boxes.
-## Components of an applicative
+## Operations of an applicative
 An applicative provides:
 
 #### `pure` (also called `unit` or `lift`) — wraps a value
