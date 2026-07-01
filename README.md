@@ -50,6 +50,20 @@ For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esr
 
    iv) Exercises
 6. Functional Programming Techniques in C++
-7. Advanced Functional Programming Techniques
 
+   i) Currying and partial application
+
+   ii) The box model
+
+   iii) Functor
+
+   iv) Applicative
+
+   v) Monad
+
+   vi) Bonus
+
+   vii) Examples
+
+   viii) Exercises
 Happy learning!
