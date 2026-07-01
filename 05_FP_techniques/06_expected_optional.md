@@ -5,7 +5,7 @@ This is the problem that `std::optional` and, later, `std::expected` were design
 
 ## `std::optional` (since C++17)
 
-`std::optional<T>` represents a value of type `T` that may be present, or it may not be. That is the entire premise. It does not explain why a value might be missing, nor does it distinguish between different kinds of absence. It simply acknowledges that absence is possible and asks the calling code to check before proceeding.
+The `std::optional<T>` represents a value of type `T` that may be present, or it may not be. That is the entire premise. It does not explain why a value might be missing, nor does it distinguish between different kinds of absence. It simply acknowledges that absence is possible and asks the calling code to check before proceeding.
 
 Consider a function that may or may not produce a result:
 
