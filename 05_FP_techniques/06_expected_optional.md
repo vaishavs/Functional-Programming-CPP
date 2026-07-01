@@ -32,22 +32,22 @@ if (result) {
 
 The `find_value` either hands back a meaningful integer or explicitly returns `std::nullopt`, a constant representing emptiness. Nothing about this return type allows the caller to accidentally treat a missing value as though it were real; the check, whether written as `has_value()` or as the object used directly in a boolean condition, becomes a natural and necessary step in the flow of the program rather than an easily skipped afterthought.
 
-`std::optional` offers a small cast of supporting functions, each suited to a different way of interacting with uncertainty. 
+The `std::optional` offers a small cast of supporting functions, each suited to a different way of interacting with uncertainty. 
 - `has_value()` — returns true if a value is present. This is the most explicit and readable way to check state, and is functionally equivalent to using the object directly in a boolean context.
 - `value()` — returns the contained value; throws `std::bad_optional_access` if empty. This function is useful when absence should be treated as a programming error worth stopping execution for, since it converts a missing value into an exception rather than undefined behavior.
 - `value_or(default)` — returns the value if present, otherwise a fallback. This is convenient for cases where a sensible default can be substituted without needing to branch explicitly.
 - `operator*` and `operator->` — access the value without bounds checking (undefined behavior if empty). These operators mirror pointer syntax and are efficient, but they place full responsibility on the caller to have already verified that a value exists.
-- `reset()` — clears the contained value, returning the `optional` to the empty state and destroying any previously held object.
+- `reset()` — clears the contained value, returning the `std::optional` to the empty state and destroying any previously held object.
 - `emplace(args...)` — constructs a new value in place using the given constructor arguments, avoiding an intermediate temporary object and any unnecessary copying or moving.
 
 
-This makes `optional` a natural fit wherever a function's result is legitimately allowed to be nothing: a search through a container that might not find a match, a configuration setting that might deliberately be left unset, a class member whose initialization must wait until later in an object's lifetime. In each of these cases, the absence of a value is not an error condition, only a normal branch in the story a program is telling.
+This makes `std::optional` a natural fit wherever a function's result is legitimately allowed to be nothing: a search through a container that might not find a match, a configuration setting that might deliberately be left unset, a class member whose initialization must wait until later in an object's lifetime. In each of these cases, the absence of a value is not an error condition, only a normal branch in the story a program is telling.
 
-But `optional`'s narrative has a limit. It can say that something is missing, but it cannot say why. If a function might fail for several distinct reasons, `optional` collapses all of them into the same undifferentiated emptiness. It also carries a small cost, usually the overhead of one extra byte or word to track whether a value is present, with some specializations like `optional<bool>` handling this internal bookkeeping with additional care.
+But `std::optional`'s narrative has a limit. It can say that something is missing, but it cannot say why. If a function might fail for several distinct reasons, `std::optional` collapses all of them into the same undifferentiated emptiness. It also carries a small cost, usually the overhead of one extra byte or word to track whether a value is present, with some specializations like `std::optional<bool>` handling this internal bookkeeping with additional care.
 
 ## `std::expected` (since C++23)
 
-Where `std::optional` speaks only of presence and absence, `std::expected<T, E>`, speaks of success and failure, and it insists on explaining the failure when it happens. An `expected<T, E>` object holds either a value of type `T`, representing success, or an error of type `E`, representing a specific, describable reason things went wrong. This is the natural next chapter in the story: once a program acknowledges that operations can fail, the next question is inevitably why, and `expected` exists to answer it.
+Where `std::optional` speaks only of presence and absence, `std::expected<T, E>`, speaks of success and failure, and it insists on explaining the failure when it happens. An `std::expected<T, E>` object holds either a value of type `T`, representing success, or an error of type `E`, representing a specific, describable reason things went wrong. This is the natural next chapter in the story: once a program acknowledges that operations can fail, the next question is inevitably why, and `std::expected` exists to answer it.
 
 ```cpp
 #include <expected>
@@ -70,14 +70,14 @@ if (result.has_value()) {
 
 In this example, `parse_number` attempts a conversion that might reasonably fail. Rather than letting an exception escape and disrupt the surrounding code, the function catches the failure internally and translates it into a `std::unexpected` object carrying a human-readable explanation. The caller, in turn, is offered a complete account of what happened, either the parsed integer or a message describing precisely what went wrong, and can choose how to respond accordingly.
 
-The member functions of `expected` echo those of `optional` but extend the vocabulary to accommodate error information. 
-- `has_value()` — returns true if a valid result is present, following the same convention as `optional`.
+The member functions of `std::expected` echo those of `std::optional` but extend the vocabulary to accommodate error information. 
+- `has_value()` — returns true if a valid result is present, following the same convention as `std::optional`.
 - `value()` — returns the value; throws `std::bad_expected_access<E>` if not present. The thrown exception carries the stored error object, so information is not lost even if the exception path is taken.
 - `error()` — returns the stored error, but is only valid to call when `has_value()` is false; calling it when a valid value is present is undefined behavior.
-- `value_or(default)` — returns the value or a fallback, similar in spirit to the equivalent function on `optional`.
+- `value_or(default)` — returns the value or a fallback, similar in spirit to the equivalent function on `std::optional`.
 - `and_then()`, `or_else()`, `transform()`, `transform_error()` — monadic operations that allow chaining a sequence of operations together, where each step only executes if the previous one succeeded, without requiring explicit branching or manual error checks at every stage.
 
-Where `expected` distinguishes itself most is in its monadic operations, `and_then()`, `or_else()`, `transform()`, and `transform_error()`, which allow chains of fallible operations to be composed without descending into nested conditionals:
+Where `std::expected` distinguishes itself most is in its monadic operations, `and_then()`, `or_else()`, `transform()`, and `transform_error()`, which allow chains of fallible operations to be composed without descending into nested conditionals:
 
 ```cpp
 auto result = parse_number("42")
@@ -97,7 +97,7 @@ Yet `std::expected`'s more elaborate plot comes with its own costs. As of mid-20
 
 ## Comparison
 
-Told side by side, the two types form a natural progression rather than a competition. `std::optional` answers the simplest possible question: does a value exist? `expected` answers a more detailed one: if something went wrong, what exactly happened? Neither is meant to dominate the other, and neither is meant to replace exceptions, which remain the appropriate mechanism for truly exceptional, program-halting conditions.
+Told side by side, the two types form a natural progression rather than a competition. `std::optional` answers the simplest possible question: does a value exist? `std::expected` answers a more detailed one: if something went wrong, what exactly happened? Neither is meant to dominate the other, and neither is meant to replace exceptions, which remain the appropriate mechanism for truly exceptional, program-halting conditions.
 
 | Aspect | `std::optional` | `std::expected` |
 |---|---|---|
