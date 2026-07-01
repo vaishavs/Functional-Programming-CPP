@@ -1,7 +1,3 @@
-Here's the full document with corrections applied and personal pronouns removed (replaced with passive/impersonal phrasing where needed).
-
----
-
 # The box model Functor
 A *box* functor (**not** a [callable object](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/02_Designing_HO_Funcs/01_intro.md#functors)) is a *type constructor*. It takes a type `T` to a new type `F<T>` — paired with one operation (`transform` in C++, `map`/`fmap` elsewhere). This operation takes a function `A → B` and an `F<A>` and produces `F<B>`, applying the function to whatever sits inside while leaving the box's *structure* untouched. In other words, given any function `f : A → B`, it produces a function `transform(f) : F<A> → F<B>`.
 
