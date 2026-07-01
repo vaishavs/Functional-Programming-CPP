@@ -566,3 +566,14 @@ This monadic `bind` cannot even *create* the second future until the first finis
 * C++ lacks higher-kinded types, so it is not possible to abstract over a type constructor `F` of kind `* → *`; the boxes do not share a uniform arity. What ships is per-type — `views::transform + views::join` for ranges, `let_value` for senders, `co_await` for coroutines, member `and_then` on the sum-type family — none of them instances of a shared concept.  
 * The target data type should be deduced every time.
 * The monad pattern is real and useful but remains thoroughly ad hoc and per-type — a recurring shape to recognize, not one named interface every box implements.
+
+
+Sources:
+
+* https://youtu.be/2FbeGrbXe2M?si=fDdzJEODvrJQRyP5
+* https://youtu.be/DiisKQAkGM4?si=1KeFu5De7bmUMG2T
+* https://medium.com/@lettier/your-easy-guide-to-monads-applicatives-functors-862048d61610
+* https://softwaremill.com/functional-containers-summary-functor-vs-applicative-vs-monad/
+* https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html
+* https://bartoszmilewski.com/2021/02/16/functorio/
+* https://www.youtube.com/watch?v=kZ8rbhGgtv4
