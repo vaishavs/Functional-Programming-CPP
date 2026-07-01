@@ -97,6 +97,7 @@ Each rung includes the powers of the one above and adds more. Every monad is an 
             (each level contains the one before it)
 ```
 
+To get a mathematical background on the box model, watch [this playlist](https://www.youtube.com/playlist?list=PLcoadSpY7rHXJWbUkjQ3P9MXBbXxLP8kV).
 
 Sources:
 * [C++ Ranges are Pure Monadic Goodness](https://bartoszmilewski.com/2014/10/17/c-ranges-are-pure-monadic-goodness/)
