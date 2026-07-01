@@ -74,27 +74,59 @@ auto combine(F f, Fut<A> a, Fut<B> b) {
 int main() {
     auto add = [](auto x, auto y){ return x + y; };           // generic binary function
 
-    std::cout << "Identity  : " << combine(add, pure_box(2), pure_box(3)).value << '\n';
-    std::cout << "Identity  : " << combine(add, pure_box(std::string("a")),       // SAME combine,
-                                                 pure_box(std::string("b"))).value // T = string
-              << '\n';
+    // ---------------- 1. IDENTITY (Box) ----------------
+    std::cout << "=== Identity (Box) ===\n";
+    Box<int> b1 = pure_box(2), b2 = pure_box(3);
+    std::cout << "Before: box1=" << b1.value << ", box2=" << b2.value << '\n';
+    std::cout << "After : " << combine(add, b1, b2).value << '\n';
 
-    Val<int> ok  = combine(add, pure_val(2), pure_val(3));
-    Val<int> bad = combine(add, fail<int>("name empty"), fail<int>("age negative"));
-    std::cout << "Valid ok  : " << ok.value << '\n';
-    std::cout << "Valid bad :";
+    Box<std::string> s1 = pure_box(std::string("a"));
+    Box<std::string> s2 = pure_box(std::string("b"));
+    std::cout << "Before: box1=\"" << s1.value << "\", box2=\"" << s2.value << "\"\n";
+    std::cout << "After : \"" << combine(add, s1, s2).value << "\"\n\n";
+
+    // ---------------- 2. VALIDATION (Val) ----------------
+    std::cout << "=== Validation (Val) ===\n";
+    Val<int> v1 = pure_val(2), v2 = pure_val(3);
+    std::cout << "Before: val1=" << v1.value << " (ok=" << v1.ok()
+               << "), val2=" << v2.value << " (ok=" << v2.ok() << ")\n";
+    Val<int> ok = combine(add, v1, v2);
+    std::cout << "After : value=" << ok.value << ", ok=" << ok.ok() << "\n\n";
+
+    Val<int> f1 = fail<int>("name empty"), f2 = fail<int>("age negative");
+    std::cout << "Before: val1=<error: " << f1.errors[0]
+               << ">, val2=<error: " << f2.errors[0] << ">\n";
+    Val<int> bad = combine(add, f1, f2);
+    std::cout << "After : errors=";
     for (auto& e : bad.errors) std::cout << " [" << e << ']';
-    std::cout << '\n';
+    std::cout << "\n\n";
 
-    std::cout << "List      :";
-    for (int x : combine(add, List<int>{1, 2}, List<int>{10, 20})) std::cout << ' ' << x;
-    std::cout << '\n';
+    // ---------------- 3. LIST (cartesian) ----------------
+    std::cout << "=== List (cartesian) ===\n";
+    List<int> l1{1, 2}, l2{10, 20};
+    std::cout << "Before: list1=[1 2], list2=[10 20]\n";
+    std::cout << "After :";
+    for (int x : combine(add, l1, l2)) std::cout << ' ' << x;
+    std::cout << "\n\n";
 
+    // ---------------- 4. READER (function of Env) ----------------
+    std::cout << "=== Reader (function) ===\n";
     Reader<int> ra = [](Env e){ return e + 1; }, rb = [](Env e){ return e * 10; };
-    std::cout << "Reader    : " << combine(add, ra, rb)(5) << '\n';
+    Env env = 5;
+    std::cout << "Before: ra(5)=" << ra(env) << ", rb(5)=" << rb(env) << " (env=" << env << ")\n";
+    std::cout << "After : " << combine(add, ra, rb)(env) << "\n\n";
 
-    Writer<int> w = combine(add, Writer<int>{2, "got2; "}, Writer<int>{3, "got3; "});
-    std::cout << "Writer    : " << w.value << "  log=\"" << w.log << "\"\n";
+    // ---------------- 5. WRITER (value + log) ----------------
+    std::cout << "=== Writer (value + log) ===\n";
+    Writer<int> w1{2, "got2; "}, w2{3, "got3; "};
+    std::cout << "Before: w1=(value=" << w1.value << ", log=\"" << w1.log
+               << "\"), w2=(value=" << w2.value << ", log=\"" << w2.log << "\")\n";
+    Writer<int> w = combine(add, w1, w2);
+    std::cout << "After : value=" << w.value << ", log=\"" << w.log << "\"\n\n";
 
-    std::cout << "Future    : " << combine(add, pure_fut(2), pure_fut(3)).get() << '\n';
+    // ---------------- 6. FUTURE (async) ----------------
+    std::cout << "=== Future (async) ===\n";
+    std::cout << "Before: fut1=<pending 2>, fut2=<pending 3>\n";
+    auto result = combine(add, pure_fut(2), pure_fut(3)).get();
+    std::cout << "After : " << result << "\n";
 }
