@@ -1,5 +1,9 @@
+Here's the full document with corrections applied and personal pronouns removed (replaced with passive/impersonal phrasing where needed).
+
+---
+
 # The box model Functor
-A *box* functor (**not** a [callable object](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/02_Designing_HO_Funcs/01_intro.md#functors)) is a *type constructor*. it takes a type `T` to a new type `F<T>` — paired with one operation (`transform` in C++, `map`/`fmap` elsewhere). This operation takes a function `A → B` and an `F<A>` and produces `F<B>`, applying the function to whatever sits inside while leaving the box's *structure* untouched. In other words, given any function `f : A → B`, it produces a function `transform(f) : F<A> → F<B>`.
+A *box* functor (**not** a [callable object](https://github.com/vaishavs/Functional-Programming-CPP/blob/main/02_Designing_HO_Funcs/01_intro.md#functors)) is a *type constructor*. It takes a type `T` to a new type `F<T>` — paired with one operation (`transform` in C++, `map`/`fmap` elsewhere). This operation takes a function `A → B` and an `F<A>` and produces `F<B>`, applying the function to whatever sits inside while leaving the box's *structure* untouched. In other words, given any function `f : A → B`, it produces a function `transform(f) : F<A> → F<B>`.
 
 The operation every functor must provide looks like this:
 
@@ -8,7 +12,7 @@ transform : (A → B)  applied to  F<A>   yields   F<B>
 ```
 In C++, it looks something like this:
 ```cpp
-template<
+template
     template<typename> class Context,
     typename Function,
     typename Input
@@ -61,7 +65,7 @@ Each "context" is a kind of box. The annoying-but-tempting approach is to *open*
 
 The functor pattern says: each box shape provides **one** operation — be it `transform` (or `map` or `fmap`) — that does the open/apply/re-box process *internally*, correctly, every time.
 
-In C++, each box grows its *own* mapping operation — `views::transform` for ranges, member transform on the sum-type family, then on senders. It is not possible to write "for any functor `F`, do this" and have the whole library satisfy it. The box-functor pattern is **ad hoc and per-type** — a recurring shape ought to be recognized, rather than one named interface every box implements.  
+In C++, each box grows its *own* mapping operation — `views::transform` for ranges, a member `transform` on the sum-type family, and yet another shape on senders. It is not possible to write "for any functor `F`, do this" and have the whole library satisfy it. The box-functor pattern is **ad hoc and per-type** — a recurring *shape* to notice by convention, rather than one named interface every box implements.
 
 ```
          f : A ──► B
@@ -86,7 +90,7 @@ With `f = (x ⇒ x*x)`:
    └───────────────┘                      └───────────────┘
 ```
 
-For a range, the preserved structure is the *length and ordering* — transform rewrites every element but never changes how many there are or what order they sit in: 
+For a range, the preserved structure is the *length and ordering* — transform rewrites every element but never changes how many there are or what order they sit in:
 ```cpp
 std::vector<int> v{1, 2, 3};
 auto doubled = v | std::views::transform([](int n){ return n * 2; });
@@ -100,7 +104,7 @@ auto doubled = v | std::views::transform([](int n){ return n * 2; });
    structure preserved = count + positions; only payloads differ
 
 ```
-So, `Box` preserves nothing but "one value," a range preserves length, a presence-context would preserve emptiness, an async context would preserve "when". The functor operation writes the payload transformation once and have it apply correctly regardless of which structure is in play. The point is to reach inside and transform the contents without opening the container at the call site and without changing *what kind* of container it is.
+So, `Box` preserves nothing but "one value," a range preserves length, a presence-context would preserve emptiness, an async context would preserve "when". The functor operation writes the payload transformation once and applies correctly regardless of which structure is in play. The point is to reach inside and transform the contents without opening the container at the call site and without changing *what kind* of container it is.
 
 It is also possible to nest boxes. If `F` and `G` are functors, then so is their **composition** `F<G<T>>`.
 ```
@@ -147,7 +151,7 @@ transform(g) ∘ transform(f)   ==   transform(g ∘ f)
         └────────── transform(g ∘ f) ─────────┘   (both paths equal)
 
 ```
-In words: two passes can be fused into one and get the same answer. This is what lets compilers and range pipelines optimize chains of maps, and it to see `box.transform(f).transform(g)` as a single conceptual step.
+In words: two passes can be fused into one and get the same answer. This is what lets compilers and range pipelines optimize chains of maps, and lets `box.transform(f).transform(g)` be treated as a single conceptual step.
 
 In C++:
 ```cpp
@@ -166,17 +170,18 @@ These laws can be visualized as a **commuting square**.
         ▼                                ▼
       F<A> ──────  transform(f)  ──────► F<B>
 ```
-If that square commutes for every `f`, your box is a real functor.
+If that square commutes for every `f`, the box is a real functor.
 
 Together, these guarantee precisely what the metaphor promises: that transform *only* touches contents and *never* the structure. A transform that dropped elements from a range under some condition would satisfy the type signature but violate the laws and would not be a functor in any meaningful sense.
 
 ## Pitfalls
-* C++ cannot enforce these laws by default. It is upto the programmer to do that correctly. 
-* C++ assumes that the mapping functions are pure functions (functions that only use but don’t modify the arguments passed to them in order to calculate the result). It expects that if the mapping function is called multiple times with the same arguments, it must return the same result every time, leave no trace that it was ever invoked, and never alter the state of the program.
-* Views in C++ are **lazy**, so the mapping function is re-invoked on each access rather than once, so an impure callable (one that mutates state, prints, or returns something time-dependent) can run an unpredictable number of times at surprising moments, quietly breaking the referential transparency the laws presuppose. 
+* C++ cannot enforce these laws by default. Correctness here is the programmer's responsibility.
+* C++ assumes that the mapping functions are pure functions (functions that only use but don't modify the arguments passed to them in order to calculate the result). The expectation is that if the mapping function is called multiple times with the same arguments, it must return the same result every time, leave no trace that it was ever invoked, and never alter the state of the program.
+* Views in C++ are **lazy**, so the mapping function is re-invoked on each access rather than once, so an impure callable (one that mutates state, prints, or returns something time-dependent) can run an unpredictable number of times at surprising moments, quietly breaking the referential transparency the laws presuppose.
 * Lifetime is another thing: a view that refers to a temporary range dangles. The guarantees are therefore only as clean as the purity and lifetimes of what is fed in, and the compiler verifies none of it — the laws are a contract, not a checked property.
-## Contravariant functors and bifunctors  
-Two refinements complete the picture. The functors above are *covariant* — arrows keep their direction. A *contravariant* functor reverses them, which is the natural shape for boxes that **consume** rather than hold a value, such as predicates or comparators.  
+
+## Contravariant functors and bifunctors
+Two refinements complete the picture. The functors above are *covariant* — arrows keep their direction. A *contravariant* functor reverses them, which is the natural shape for boxes that **consume** rather than hold a value, such as predicates or comparators.
 ```
    Covariant (holds a value):
         A → B        lifts to        F<A> → F<B>       (same direction)
@@ -193,9 +198,9 @@ std::function<bool(std::string)> has_even_length =
     [=](const std::string& s){ return is_even(s.size()); };
 
 ```
-The conversion supplied here goes `string → int` (take the length), yet it produces a predicate on *strings* out of a predicate on *ints* — the arrow flips. That reversal is the contravariant functor in action, and it is why "map" feels backwards for callbacks, comparators, and consumers: the data flows *into* them, so adapting them runs against the direction of the conversion.  
+The conversion supplied here goes `string → int` (take the length), yet it produces a predicate on *strings* out of a predicate on *ints* — the arrow flips. That reversal is the contravariant functor in action, and it is why "map" feels backwards for callbacks, comparators, and consumers: the data flows *into* them, so adapting them runs against the direction of the conversion.
 
-A *bifunctor* is a functor in two type parameters at once, with two independent channels. A `std::pair` is the clean standard example — the **product** bifunctor, where both channels are always present and each can be mapped on its own:  
+A *bifunctor* is a functor in two type parameters at once, with two independent channels. A `std::pair` is the clean standard example — the **product** bifunctor, where both channels are always present and each can be mapped on its own:
 ```cpp
 std::pair<int, std::string> p{21, "hi"};
 auto left  = std::pair{ p.first * 2, p.second };       // map first  channel → (42, "hi")
@@ -212,7 +217,7 @@ auto right = std::pair{ p.first, p.second + "!" };     // map second channel →
 ```
 ## Examples and use cases
 ### 1. Identity functor
-The simplest possible box is the **identity functor**: a context that adds no structure beyond "holds exactly one value."  
+The simplest possible box is the **identity functor**: a context that adds no structure beyond "holds exactly one value."
 ```
             f : A → B
    ┌──────────┐   transform   ┌──────────┐
@@ -286,7 +291,7 @@ int main()
                         [](int x){ return x * x; });        // {1, 4, 9, 16}
 
     // (b) Lazy — std::views::transform (C++20). The box is now *lazy*:
-    //     nothing is computed until you iterate. A functor can defer work.
+    //     nothing is computed until iteration happens. A functor can defer work.
     auto lazy = v | std::views::transform([](int x){ return x * x; });
     for (int s : lazy) {
         std::cout << s << " ";
@@ -362,7 +367,7 @@ auto fahrenheit = transform(temp, [](int c){ return c * 9 / 5 + 32; });
 Preserved shape: the entire first element. This is the seed of the **Writer functor**, where the first slot accumulates context.
 
 ### 5. The value-arriving-later box - `std::future`
-A future is a box whose contents *don't exist yet*. Mapping over it schedules `f` to run **once the value arrives**, yielding a future of the transformed result. The preserved shape is the "later-ness" — you still get back something asynchronous.
+A future is a box whose contents *don't exist yet*. Mapping over it schedules `f` to run **once the value arrives**, yielding a future of the transformed result. The preserved shape is the "later-ness" — the result is still something asynchronous.
 
 ```
    ┌───────────────────┐                       ┌───────────────────┐
@@ -400,7 +405,7 @@ int main()
 The `std::future` represents the "delay/effect" behaviour of the context.
 
 ### 6. The function as a box (the on-demand box)
-Whenever there is a shape `F<A>` with a lawful way to turn `A`s into `B`s underneath the shape, you have a functor — even when the shape itself is "a computation waiting for an argument."
+Whenever there is a shape `F<A>` with a lawful way to turn `A`s into `B`s underneath the shape, that shape is a functor — even when the shape itself is "a computation waiting for an argument."
 ```
          R                       R                        R
          │                       │                        │
@@ -439,7 +444,7 @@ int main()
 ```
 
 ### 7. A generic functor with concepts (C++20)
-C++20 concepts help us to at least *describe* the surface requirement: "X is a functor" as a **concept** that checks *any* `transform(x, f)`.
+C++20 concepts help describe the surface requirement — "X is a functor" — as a **concept** that checks *any* `transform(x, f)`.
 ```cpp
 #include <iostream>
 #include <concepts>
@@ -488,7 +493,7 @@ int main() {
 | `std::future<T>`           | a parcel that arrives later              | 1 (eventually)    | free `fmap` via `std::async`                  | delay / async effect     |
 | `R → A` (a function)       | a value computed on demand from input    | 1 per input       | composition (`fmap_fn` = `f` after `h`)       | dependency on an input   |
 
-Across every row, the same two truths hold: the **box kind is preserved**, and your function `f` only ever touches the *contents*, never the *shape*. That invariance is the entire point of the box model.
+Across every row, the same two truths hold: the **box kind is preserved**, and `f` only ever touches the *contents*, never the *shape*. That invariance is the entire point of the box model.
 
 Sources:
 * https://youtu.be/2FbeGrbXe2M?si=fDdzJEODvrJQRyP5
