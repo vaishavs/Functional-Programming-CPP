@@ -1,7 +1,11 @@
-## What applicative adds to functor  
+Here's the full document with the corrections applied and all instances of "you" removed (there was one in my own suggested edit, now rephrased in passive voice; the original body text didn't use "you" elsewhere).
+
+---
+
+## What applicative adds to functor
 An applicative combines several boxes whose structure is fixed in advance and when the computations don't depend on each other's results.
 
-A functor provides one operation, `transform`, which lifts a *unary* function over a *single* box. An applicative adds two operations and, with them, the ability to lift an *n-ary* function over *n* boxes.  
+A functor provides one operation, `transform`, which lifts a *unary* function over a *single* box. An applicative adds two operations and, with them, the ability to lift an *n-ary* function over *n* boxes.
 The two additions are pure (inject a plain value into the minimal context, `A → F<A>`) and `ap` (apply a *boxed* function to a *boxed* value).
 
 The reason this matters is the motivating problem applicatives solve: combining *several independent boxes* with a multi-argument function. Suppose that given a two-argument function `f : A → B → C` and two boxes `F<A>` and `F<B>`.
@@ -14,7 +18,7 @@ Because `g` is curried, applying a `transform` to an `A` returns a function `B �
 ```
  transform(g) over F<A>  ─────►  F<(B → C)>      ← a box of half-finished functions
 ```
-A functor knows how to put a *plain* function into a box, not how to apply a *boxed* function. It has no operation that can apply a boxed function to the boxed `F<B>`. 
+A functor knows how to put a *plain* function into a box, not how to apply a *boxed* function. It has no operation that can apply a boxed function to `F<B>`.
 ```
    transform (f : A→B→C) over F<A>  ⇒  F< B → C >    a BOXED function
                                             │
@@ -52,6 +56,7 @@ The signature of `ap` against `transform` is:
                          the function is INSIDE a box too
 ```
 In fact, an applicative can combine **any number** of independent boxes.
+
 ## Operations of an applicative
 An applicative provides:
 
@@ -67,7 +72,7 @@ That's the whole operation: bare value in, box out.
 In C++, this is what it looks like:
 ```cpp
 // Lift a value into the context.
-template<
+template
     template<typename> class Context,
     typename T
 >
@@ -79,7 +84,7 @@ T → Context<T>
 ```
 
 #### `ap` (written `<*>`) — combine several boxes with one function
-This is the operation that defines an applicative. A functor (the level below) can only touch one box. An applicative combines several boxes at once using a function. The cleanest way to see it: multiple boxes go in, one function joins their contents, one box comes out. The function is supplied plainly and the two boxes after it; the contents are paired up and combined. Combining **more than one box** is the entire point of this operation — and the single thing that separates an applicative from a functor.
+This is the operation that defines an applicative. A functor (the level below) can only touch one box. An applicative combines several boxes at once using a function. The cleanest way to see it: multiple boxes go in, one function joins their contents, one box comes out. The function is supplied plainly, followed by the two boxes; their contents are paired up and combined. Combining **more than one box** is the entire point of this operation — and the single thing that separates an applicative from a functor.
 
 ```
  ap  :   F<A → B>   ×   F<A>   ──►   F<B>
@@ -105,7 +110,7 @@ This is the operation that defines an applicative. A functor (the level below) c
 In C++, this is what it looks like:
 ```cpp
 // Apply a wrapped function to a wrapped value.
-template<
+template
     template<typename> class Context,
     typename Function,
     typename Input
@@ -121,8 +126,9 @@ apply:   Context<Input -> Output>     -> Context<Input> -> Context<Output>
         └─ Context on the function ─┘
 ```
 The *function* itself is wrapped: `Context<Input -> Output>`. It is boxed (inside). This is the one extra wrapper that defines an applicative.
-## The laws  
-An applicative must satisfy four laws, the analogues of the functor laws one level up. 
+
+## The laws
+An applicative must satisfy four laws, the analogues of the functor laws one level up.
 1. *Identity*: `ap(pure(id), v) = v`. It adds no structure beyond holding a value.
 2. *Homomorphism*: `ap(pure(f), pure(x)) = pure(f(x))` — applying a pure function to a pure argument is the same as doing the application on plain values and injecting the result. Pure-on-pure never manufactures any effect or extra structure.
 3. *Interchange*: when the value side is pure, the order of evaluation can be swapped. The law says a pure argument carries no effects, so it doesn't matter whether the effectful `u` or the pure `y` is considered to act first.
@@ -227,7 +233,7 @@ Now, `Writer` carries a monoid *along with* a real value; `Const` carries a mono
 
 **Writer — value and a log**
 
-A `Writer` is a pair: `{ the real value, a monoid }`. The classic monoid here is a log (a string, or a vector of messages). The idea is tto compute a normal value but *also* accumulate some running record beside it. The `pure x` wraps a plain value and attaches the monoid's identity as the starting log. The product combines two Writers by pairing the two real values *and* combining the two logs with the monoid's `⊕`.
+A `Writer` is a pair: `{ the real value, a monoid }`. The classic monoid here is a log (a string, or a vector of messages). The idea is to compute a normal value but *also* accumulate some running record beside it. The `pure x` wraps a plain value and attaches the monoid's identity as the starting log. The product combines two Writers by pairing the two real values *and* combining the two logs with the monoid's `⊕`.
 
 **Const — only the monoid, the value is ignored**
 `Const<M>` is the strange-but-useful sibling. It carries only an `M` (a monoid) — there is a value type in the signature, but it is never actually stored or used. The `pure x` throws the `x` away and returns the monoid's identity. The product ignores any values (there are none to speak of) and just combines the two `M`s with `⊕`.
@@ -249,7 +255,7 @@ In summary:
 
 #### The async family
 
-This family consists of senders (`just` / `when_all` / `then`, standardized for C++26 and available through `stdexec`) and the older `std::future`. A box here is a value that will arrive later. `pure x` is `just(x)` for senders, a ready future for `std::future` — is the computation that delivers `x` immediately, with no waiting. The product is the concurrent combine: `when_all` starts both computations, waits for both to finish, and produces their results together. So in this family, running things concurrently *is* the applicative product — independent work fired off together and joined once all of it completes.
+This family consists of senders (`just` / `when_all` / `then`, standardized for C++26 and available through `stdexec`) and the older `std::future`. A box here is a value that will arrive later. `pure x` is `just(x)` for senders, a ready future for `std::future` — the computation that delivers `x` immediately, with no waiting. The product is the concurrent combine: `when_all` starts both computations, waits for both to finish, and produces their results together. So in this family, running things concurrently *is* the applicative product — independent work fired off together and joined once all of it completes.
 
 Feeding one async result into the *next* — where the second computation depends on the first — is a separate operation, outside the applicative interface this catalogue is concerned with. The applicative product is specifically the independent, run-them-together case.
 
@@ -265,6 +271,7 @@ Feeding one async result into the *next* — where the second computation depend
 Within a cell, the `·` separates the members of that family, in the same order across all three columns — so in **Failure / error**, `optional` ↔ `optional{x}` ↔ pair-else-nullopt, `expected` ↔ `expected{x}` ↔ first-error-wins, Validation ↔ `valid{x}` ↔ collect-all. The **Shape** and **Monoid** rows read the same way (two members each), and **Trivial**/**Function** have just one.
 
 ## Examples and use cases
+
 #### 1. The Identity applicative
 
 ```cpp
@@ -348,6 +355,7 @@ std::vector<std::function<int(int)>> fs = {            // different lambdas need
 std::vector<int> xs = {1, 2, 3};
 auto r = ap(fs, xs);                                   // {2, 3, 4, 10, 20, 30}
 ```
+
 #### 3. Maybe applicative
 
 A smart pointer is a box that might be empty. Its `ap` produces a value only when **both** the function-box and the value-box are present; if either is null, the result is null and the function never runs.
@@ -425,7 +433,7 @@ auto greet = combineReader(
 auto line = greet(Config{"Ada", 36});              // "Ada is 36"
 ```
 
-This is how many computations are assembled that each read from a shared configuration/context and combine their results — without threading the context through by hand. The "effect" the Reader applicative adds is *dependence on an ambient environment*.
+This is how many computations that each read from a shared configuration/context are assembled and have their results combined — without threading the context through by hand. The "effect" the Reader applicative adds is *dependence on an ambient environment*.
 
 #### 6. Async
 
@@ -455,10 +463,11 @@ auto combined = combineFuture(std::move(fa), std::move(fb),
 The crucial observation: `fa` and `fb` **do not depend on each other**, so they overlap in time.
 
 ## Drawbacks
-* C++ has no higher-kinded types, so — exactly as with functors — there is no standard `Applicative` interface and no way to write one constraint over "all boxes." 
+* C++ has no higher-kinded types, so — exactly as with functors — there is no standard `Applicative` interface and no way to write one constraint over "all boxes."
 * `pure` is return-type-polymorphic, which C++ can't express directly. In C++, the target box must be named: `pure_box`, `pure_vec`, `make_shared`, `valid`, a ready `future`, etc. Generally, a per-box `pure` is written (and often the box type is passed as a template argument when context can't supply it).
 * Some `pure`s want laziness (ZipList's infinite `repeat`), which a finite eager container can't provide — hence `std::views::repeat`.
 
+---
 
 Sources:
 
