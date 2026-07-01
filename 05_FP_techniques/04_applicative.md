@@ -72,7 +72,7 @@ That's the whole operation: bare value in, box out.
 In C++, this is what it looks like:
 ```cpp
 // Lift a value into the context.
-template
+template <
     template<typename> class Context,
     typename T
 >
@@ -110,7 +110,7 @@ This is the operation that defines an applicative. A functor (the level below) c
 In C++, this is what it looks like:
 ```cpp
 // Apply a wrapped function to a wrapped value.
-template
+template <
     template<typename> class Context,
     typename Function,
     typename Input
