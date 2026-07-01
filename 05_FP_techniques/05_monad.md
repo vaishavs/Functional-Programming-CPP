@@ -1,3 +1,7 @@
+Here's the full document with the `shared_ptr` `bind` fix applied (clearer signature, no dereference inside `decltype`).
+
+---
+
 # Monads in C++ (the Box Model)
 
 A monad is a box that can chain computations while handling context internally. Each step receives the previous value and produces a brand-new box, which the monad automatically flattens back to a single layer.
@@ -133,7 +137,7 @@ This is what *makes* it a monad. `bind` takes a box and a function that returns 
 ```
 In C++, it looks like this:
 ```cpp
-template<
+template
     template<typename> class Context,
     typename FunctionReturningContext,
     typename Input
@@ -170,7 +174,7 @@ bind(c, f)  =  join( transform(f, c) )
         two layers                                            one layer
 ```
 
-However, in C++, there's **no** single operator called `bind`; it is called **`transform` then `join`** for ranges. The `transform` (`std::views::transform`) makes the box-of-boxes, and `join` (`std::views::join`) flattens it. 
+However, in C++, there's **no** single operator called `bind`; it is called **`transform` then `join`** for ranges. The `transform` (`std::views::transform`) makes the box-of-boxes, and `join` (`std::views::join`) flattens it.
 
 ```
    f : T → F<U>      (a function that returns a BOX)
@@ -184,11 +188,11 @@ However, in C++, there's **no** single operator called `bind`; it is called **`t
    bind(m, f)  ==  join(transform(f, m))
 ```
 
-## The monad laws  
-A monad must satisfy three laws, the analogues of the functor and applicative laws at this level, and they are most transparently stated through bind and pure. 
+## The monad laws
+A monad must satisfy three laws, the analogues of the functor and applicative laws at this level, and they are most transparently stated through bind and pure.
 
-* Left identity: `bind(pure(a), f) = f(a)` — injecting a value and immediately binding is just calling the continuation, so pure adds no structure on the way in. 
-* Right identity: `bind(m, pure) = m` — binding `pure` changes nothing. 
+* Left identity: `bind(pure(a), f) = f(a)` — injecting a value and immediately binding is just calling the continuation, so pure adds no structure on the way in.
+* Right identity: `bind(m, pure) = m` — binding `pure` changes nothing.
 * Associativity: `bind(bind(m, f), g) = bind(m, [](x){ return bind(f(x), g); })` — the order of grouping a chain of binds does not matter.
 
 ```
@@ -486,6 +490,7 @@ The `bind` runs the next step **only if** the pointer is non-null; that step get
 
 ```cpp
 #include <memory>
+#include <type_traits>
 
 template <typename T>
 std::shared_ptr<T> join(const std::shared_ptr<std::shared_ptr<T>>& pp) {
@@ -493,10 +498,11 @@ std::shared_ptr<T> join(const std::shared_ptr<std::shared_ptr<T>>& pp) {
     return *pp;                          // inner ptr (itself maybe null)
 }
 
-template <typename T, typename F>       // f : T → shared_ptr<U>
-auto bind(const std::shared_ptr<T>& p, F f) {
-    if (!p) return decltype(f(*p)){};    // empty in, empty out
-    return f(*p);                        // f picks the next box (may be null)
+// f : T → shared_ptr<U>
+template <typename T, typename F>
+auto bind(const std::shared_ptr<T>& p, F f) -> std::invoke_result_t<F, T&> {
+    if (!p) return nullptr;              // empty in, empty out — f never runs
+    return f(*p);                        // f picks the next box (may itself be null)
 }
 // pure_ptr(x) == std::make_shared<T>(x)
 ```
@@ -563,7 +569,7 @@ auto bind(std::future<T> fut, F f) {
 This monadic `bind` cannot even *create* the second future until the first finishes, so it is strictly sequential.
 
 ## Drawbacks
-* C++ lacks higher-kinded types, so it is not possible to abstract over a type constructor `F` of kind `* → *`; the boxes do not share a uniform arity. What ships is per-type — `views::transform + views::join` for ranges, `let_value` for senders, `co_await` for coroutines, member `and_then` on the sum-type family — none of them instances of a shared concept.  
+* C++ lacks higher-kinded types, so it is not possible to abstract over a type constructor `F` of kind `* → *`; the boxes do not share a uniform arity. What ships is per-type — `views::transform + views::join` for ranges, `let_value` for senders, `co_await` for coroutines, member `and_then` on the sum-type family — none of them instances of a shared concept.
 * The target data type should be deduced every time.
 * The monad pattern is real and useful but remains thoroughly ad hoc and per-type — a recurring shape to recognize, not one named interface every box implements.
 
