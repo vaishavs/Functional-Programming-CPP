@@ -458,3 +458,14 @@ The crucial observation: `fa` and `fb` **do not depend on each other**, so they 
 * C++ has no higher-kinded types, so — exactly as with functors — there is no standard `Applicative` interface and no way to write one constraint over "all boxes." 
 * `pure` is return-type-polymorphic, which C++ can't express directly. In C++, the target box must be named: `pure_box`, `pure_vec`, `make_shared`, `valid`, a ready `future`, etc. Generally, a per-box `pure` is written (and often the box type is passed as a template argument when context can't supply it).
 * Some `pure`s want laziness (ZipList's infinite `repeat`), which a finite eager container can't provide — hence `std::views::repeat`.
+
+
+Sources:
+
+* https://www.youtube.com/watch?v=KDn28TZdKb4
+* https://youtu.be/2FbeGrbXe2M?si=fDdzJEODvrJQRyP5
+* https://youtu.be/DiisKQAkGM4?si=1KeFu5De7bmUMG2T
+* https://medium.com/@lettier/your-easy-guide-to-monads-applicatives-functors-862048d61610
+* https://softwaremill.com/functional-containers-summary-functor-vs-applicative-vs-monad/
+* https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html
+* https://bartoszmilewski.com/2021/02/16/functorio/
