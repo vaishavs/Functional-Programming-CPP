@@ -1,8 +1,3 @@
-Here's the full document with the corrections applied and all instances of "you" removed (there was one in my own suggested edit, now rephrased in passive voice; the original body text didn't use "you" elsewhere).
-
----
-
-## What applicative adds to functor
 An applicative combines several boxes whose structure is fixed in advance and when the computations don't depend on each other's results.
 
 A functor provides one operation, `transform`, which lifts a *unary* function over a *single* box. An applicative adds two operations and, with them, the ability to lift an *n-ary* function over *n* boxes.
