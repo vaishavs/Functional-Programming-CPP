@@ -1,7 +1,3 @@
-Here's the full document with the `shared_ptr` `bind` fix applied (clearer signature, no dereference inside `decltype`).
-
----
-
 # Monads in C++ (the Box Model)
 
 A monad is a box that can chain computations while handling context internally. Each step receives the previous value and produces a brand-new box, which the monad automatically flattens back to a single layer.
