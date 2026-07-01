@@ -577,5 +577,5 @@ Sources:
 * https://medium.com/@lettier/your-easy-guide-to-monads-applicatives-functors-862048d61610
 * https://softwaremill.com/functional-containers-summary-functor-vs-applicative-vs-monad/
 * https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html
-* https://bartoszmilewski.com/2021/02/16/functorio/
+* https://bartoszmilewski.com/2011/07/11/monads-in-c/
 * https://www.youtube.com/watch?v=kZ8rbhGgtv4
