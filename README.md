@@ -18,9 +18,9 @@ For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esr
   
    ii) Examples
 
-2. Designing higher-order functions in C++
+2. Designing higher-order functions
    
-   i) Callable entities in C++
+   i) Callable entities
    
    ii) ```std::function``` and ```std::function_ref```
    
@@ -31,7 +31,7 @@ For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esr
    v) Examples
 
    vi) Exercises
-4. Standard Higher-Order Functions in C++
+4. Standard Higher-Order Functions
 
    i) Introduction
 
@@ -49,7 +49,7 @@ For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esr
    iii) Examples
 
    iv) Exercises
-6. Functional Programming Techniques in C++
+6. Advanced Functional Programming Techniques
 
    i) Currying and partial application
 
