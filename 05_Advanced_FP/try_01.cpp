@@ -1,4 +1,4 @@
-// Exercise 7: DEBUG — a broken "functor-style" transformation
+// Exercise: DEBUG — a broken "functor-style" transformation
 //
 // SYMPTOM:
 // This program is supposed to print the doubled value of each optional in
