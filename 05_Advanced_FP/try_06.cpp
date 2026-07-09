@@ -1,4 +1,4 @@
-// Exercise 2: Functor — std::expected::transform
+// Exercise: Functor — std::expected::transform
 //
 // GOAL:
 // std::expected::transform(f) behaves like std::optional::transform, but
