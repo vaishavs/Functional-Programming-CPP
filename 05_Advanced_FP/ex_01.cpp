@@ -1,3 +1,4 @@
+/* Currying and partial application demo */
 #include <functional>
 #include <iostream>
 #include <string>
