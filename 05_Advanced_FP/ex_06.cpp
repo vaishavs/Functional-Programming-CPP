@@ -1,3 +1,5 @@
+
+/* Functor, applicative, and monad example with std::optional and atd::expected */
 #include <optional>
 #include <expected>
 #include <string>
