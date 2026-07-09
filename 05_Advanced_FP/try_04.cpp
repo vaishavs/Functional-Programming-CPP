@@ -1,4 +1,4 @@
-// Exercise 3: Applicative — combining two Many<T> boxes (a Vector, not a Maybe)
+// Exercise: Applicative — combining two Many<T> boxes (a Vector, not a Maybe)
 //
 // GOAL:
 // This exercise uses a completely different shape of box than a
