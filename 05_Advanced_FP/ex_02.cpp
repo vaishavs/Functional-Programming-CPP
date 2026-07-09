@@ -1,3 +1,9 @@
+/*
+    The Box Model demo
+
+    This example contains a box Box<T>, which implements a functor, an applicative, and a monad.
+ */
+
 #include <iostream>
 
 // =============================================================================
