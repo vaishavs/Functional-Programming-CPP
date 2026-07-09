@@ -1,4 +1,4 @@
-// Exercise 8: DEBUG — a broken monad chain (this file currently FAILS TO
+// Exercise: DEBUG — a broken monad chain (this file currently FAILS TO
 // COMPILE)
 //
 // SYMPTOM:
