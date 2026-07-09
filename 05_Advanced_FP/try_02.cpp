@@ -1,4 +1,4 @@
-// Exercise 9: DEBUG — a broken applicative combine
+// Exercise: DEBUG — a broken applicative combine
 //
 // SYMPTOM:
 // apply2 is supposed to combine two independent std::optional values,
