@@ -1,4 +1,4 @@
-// Exercise 6: Monad — implementing and_then (bind) for a Logged<T> box
+// Exercise: Monad — implementing and_then (bind) for a Logged<T> box
 //
 // GOAL:
 // This exercise uses yet another shape: Logged<T> always holds a value —
