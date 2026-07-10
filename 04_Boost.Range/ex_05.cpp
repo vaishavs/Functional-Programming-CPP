@@ -1,4 +1,4 @@
-/* Extending Boost Library Demo */
+/* DEMO - Extending Boost.Range Library*/
 
 #include <algorithm>   // std::clamp, std::min, std::max
 #include <cmath>       // std::sqrt
