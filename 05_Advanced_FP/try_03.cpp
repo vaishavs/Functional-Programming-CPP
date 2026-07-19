@@ -1,5 +1,5 @@
 // ============================================================================
-//  Currying & Partial Application in C++ — Solutions & Commentary
+//  Currying & Partial Application in C++ — DEBUG exercise
 // ============================================================================
 //
 //  Build:
