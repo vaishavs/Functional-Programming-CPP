@@ -1,7 +1,7 @@
 # Functional Programming in C++
 This repo contains explanation and examples about functional programming in C++. The explanations are listed in `.md` files, and examples and exercises are included in `.cpp` files to try out in the latest compiler like [Wandbox](https://wandbox.org). Sources that have been referred to are listed at the end of `.md` files.
 
-Most of the content is based on [Functional Programming in C++](https://codesignal.com/learn/paths/functional-programming-in-cpp). It is highly recommended to take up this free course for hands-on practice.
+The structure of this repo is based on [Functional Programming in C++](https://codesignal.com/learn/paths/functional-programming-in-cpp). It is highly recommended to take up this free course for hands-on practice.
 
 For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwi82-b_pfmSAxWnhIkEHacPIkIQFnoECAwQAQ&url=https%3A%2F%2Fgithub.com%2Fgraninas%2Fcpp_functional_programming&usg=AOvVaw1a2HCdNLW9sArKzR4kY3Uo&opi=89978449).
 
