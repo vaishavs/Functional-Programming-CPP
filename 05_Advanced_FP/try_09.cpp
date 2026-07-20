@@ -1,5 +1,5 @@
 // ===========================================================================
-// The Box Model of Functors in C++ — TODO/FIXME exercise (detailed hints)
+// The Box Model of Functors in C++ — TODO/FIXME exercise
 //
 // One file, five steps, several kinds of work:
 //   TODO(n)   — implement from scratch.
@@ -16,30 +16,21 @@
 //   Build : g++ -std=c++20 -Wall -Wextra -o functor box_functor_todo.cpp
 //   Run   : ./functor
 //
-// The category in play
-//   Objects are C++ types; morphisms are const-invocable callables T -> U;
-//   composition is compose(g, f) (step 2); the identity morphism is id
-//   (given below). A functor F consists of
-//     * an object map   — a type constructor:   T        |->  F<T>
-//     * a morphism map  — fmap:                 (T -> U) |->  (F<T> -> F<U>)
-//   subject to two laws:
+// The contract
+//   A functor F needs a type constructor T |-> F<T> and
+//     fmap : (T -> U) x F<T> -> F<U>
+//   satisfying two laws, checked UP TO operator==:
 //     identity        fmap(id, b)             ==  b
 //     composition     fmap(compose(g, f), b)  ==  fmap(g, fmap(f, b))
-//   The laws are not decoration; they are the entire content of the word
-//   "functor". An fmap without them is just a function with a hopeful name.
-//
-//   Honesty footnote: everything here is checked UP TO operator==. The
-//   ambient category's notion of equality is whatever == says — a point
-//   that stops being pedantic the moment you reach FIXME(A).
 //
 // Ground rules
 //   * Standard library only.
 //   * Value semantics throughout: fmap never mutates its input box.
 //   * Everything must compile clean under -Wall -Wextra.
 //
-// Hint layering per step, as before: SPEC (the contract, pinned by the
-// tests), HINTS (the mechanics), SHAPE (the skeleton with load-bearing
-// expressions elided as <...>). Stop reading as early as you can.
+// Hint layering per step: SPEC (the contract, pinned by the tests), HINTS
+// (the mechanics), SHAPE (the skeleton with load-bearing expressions
+// elided as <...>). Stop reading as early as you can.
 // ===========================================================================
 
 #include <cassert>
@@ -58,18 +49,16 @@
 #define STEP5_READY 0
 
 // ---------------------------------------------------------------------------
-// Given: the identity morphism.
-// A forwarding identity: returns exactly what it was handed, reference and
-// all. The decltype(auto) matters — a decaying id would still satisfy the
-// laws up to ==, but this one is the honest identity morphism (and copies
-// nothing on the way through).
+// Given: id, used as fmap's identity throughout.
+// decltype(auto) forwards the argument through unchanged — no decay, no
+// copy — which is what the identity law needs.
 // ---------------------------------------------------------------------------
 inline constexpr auto id = [](auto&& x) -> decltype(auto) {
     return std::forward<decltype(x)>(x);
 };
 
 // ---------------------------------------------------------------------------
-// STEP 1 — Box<T>: the smallest possible functor (the Identity functor)
+// STEP 1 — Box<T>: the smallest functor
 //
 // SPEC
 //   fmap(f, Box<T>{v}) == Box<U>{f(v)}, where U is the decayed result of f.
@@ -80,30 +69,23 @@ inline constexpr auto id = [](auto&& x) -> decltype(auto) {
 //   * Pointers to members are morphisms too (the P::len test).
 //
 // HINTS
-//   * fmap is deliberately a free function template, overloaded once per
-//     functor. Overload resolution on the second parameter is C++'s
-//     stand-in for a typeclass method — and unqualified calls resolved
-//     through ordinary lookup + ADL will find the right overload even
-//     from generic code written earlier in the file (step 5 leans hard
-//     on this).
-//   * Apply f with std::invoke(f, b.value). Call syntax f(b.value) cannot
-//     handle pointers to members; invoke implements the full INVOKE
-//     protocol — same reason as in the currying exercise's partial.
+//   * fmap is a free function template, overloaded once per box type.
+//     Call it unqualified — ordinary lookup + ADL finds the right
+//     overload even from generic code written earlier in the file (step
+//     5 leans hard on this).
+//   * Apply f with std::invoke(f, b.value). Plain call syntax f(b.value)
+//     cannot handle pointers to members; invoke can.
 //   * The result type — two routes:
 //       (a) C++20 aggregate CTAD:  return Box{std::invoke(f, b.value)};
-//           Aggregate deduction guides deduce the member type BY VALUE
-//           from the initializer, i.e. the result decays (cv-qualifiers
-//           and references stripped) — exactly the value semantics this
-//           file wants.
+//           deduces the member type BY VALUE from the initializer, so
+//           the result decays automatically.
 //       (b) Spell it out:
 //             Box<std::remove_cvref_t<std::invoke_result_t<F&, T const&>>>
-//           Note how the trait mirrors the actual call: f is an lvalue
-//           inside fmap (hence F&), and b.value is a const lvalue (hence
-//           T const&). Traits that mirror the call, letter for letter —
-//           the same discipline the currying exercise drilled.
+//           Mirror the actual call: f is an lvalue inside fmap (hence
+//           F&), and b.value is a const lvalue (hence T const&).
 //   * Resist decoration. fmap applies f to the payload and rebuilds the
-//     box; anything else it does — counting, logging, normalising,
-//     special-casing — is a law violation queuing up for step 3.
+//     box — nothing else (no counting, logging, normalising, special-
+//     casing).
 //
 // SHAPE
 //     template <class F, class T>
@@ -130,33 +112,21 @@ auto fmap(F&& f, Box<T> const& b) {
 //   identity_law(b)           ==  (fmap(id, b) == b)
 //   composition_law(g, f, b)  ==  (fmap(compose(g, f), b)
 //                                    == fmap(g, fmap(f, b)))
-//   * All three are generic: they must work unchanged for EVERY box type
-//     in this file — Box now; TracedBox, EagerBox, MaybeBox later. That
-//     genericity is the payoff of fmap-as-overload-set, and it is what
-//     step 4 will quietly test.
+//   * All three must work unchanged for EVERY box type in this file —
+//     Box now; TracedBox, EagerBox, MaybeBox later.
 //
 // HINTS
-//   * compose: capture g and f by value (value semantics, as everywhere);
-//     return a generic lambda applying f, then g. Give it a
-//     reference-preserving return type (-> decltype(auto)) so that the
-//     composite of reference-preserving morphisms stays one — the tests
-//     do not insist, the discipline does.
-//   * identity_law is one line. The comparison is the point: the law is
-//     checked UP TO the box's operator==. This is not a proof about
-//     mathematical objects; it is membership in the equivalence that ==
-//     induces. File that thought under FIXME(A).
+//   * compose: capture g and f by value; return a generic lambda applying
+//     f, then g. Give it a reference-preserving return type
+//     (-> decltype(auto)).
+//   * identity_law is one line: compare fmap(id, b) to b with ==.
 //   * composition_law: build both sides, compare. Argument convention:
 //     composition_law(g, f, b) applies g AFTER f — matching compose(g, f).
 //   * Call fmap unqualified inside the checkers; each box type's overload
-//     is found at instantiation (the call is dependent, so argument-
-//     dependent lookup gathers candidates then — including overloads
-//     declared later in the file, since their box types live in the
-//     global namespace).
-//   * Teaser for step 3: in Haskell, the identity law IMPLIES the
-//     composition law for any fmap of the right type — a free theorem
-//     from parametricity (Wadler 1989, "Theorems for Free!"). Write the
-//     composition checker anyway. C++ is about to show you why it earns
-//     its keep.
+//     is found at instantiation via argument-dependent lookup — including
+//     overloads declared later in the file.
+//   * Write both checkers even though later steps will show cases where
+//     one law holds and the other doesn't.
 //
 // SHAPE
 //     template <class G, class F2>
@@ -197,10 +167,11 @@ auto composition_law(G g, F2 f, B const& b) {  // deduces bool once implemented
 //   convict — but commit to your PREDICTions first. (Requires step 2.)
 //
 // ...........................................................................
-// FIXME(A) — TracedBox: "observability, what could it cost?"
+// FIXME(A) — TracedBox: an fmap that counts its own calls
 //
-// Someone instrumented fmap with a hop counter so a dashboard can show how
-// many transformations a value has been through.
+// fmap is instrumented with a hop counter that increments on every call,
+// so a dashboard can show how many transformations a value has been
+// through.
 //
 // PREDICT before enabling the tests: which checkers convict TracedBox —
 // identity, composition, or both? (Careful: BOTH sides of the composition
@@ -210,18 +181,14 @@ auto composition_law(G g, F2 f, B const& b) {  // deduces bool once implemented
 //
 //   The repair. Two legitimate routes — pick ONE, implement it, and defend
 //   the choice in a comment at QUESTION(A):
-//     Route 1 (purify): the only observable act of a lawful fmap is
-//       applying f to the payload. Drop the increment — and arguably the
-//       field. fmap(id, b) is then indistinguishable from b again.
-//     Route 2 (quotient): declare hops non-semantic bookkeeping. Replace
-//       the defaulted operator== with one comparing value alone. The laws
-//       then hold in the quotient the coarser equality induces — the
-//       header's "up to ==" footnote, cashing out. The commitment you are
-//       signing: hops may never again influence any semantic decision
-//       anywhere, or the quotient was a lie.
+//     Route 1 (purify): drop the increment (and arguably the field
+//     itself). fmap(id, b) is then indistinguishable from b again.
+//     Route 2 (quotient): keep hops as non-semantic bookkeeping, but
+//     replace the defaulted operator== with one comparing value alone, so
+//     hops can never affect a law check or a test.
 //     Not legitimate: keeping hops both incremented and ==-observable.
-//   The tests are deliberately route-agnostic (they check .value and the
-//   laws, never hops), so either honest repair goes green.
+//   The tests are route-agnostic (they check .value and the laws, never
+//   hops), so either repair goes green.
 // ...........................................................................
 template <class T>
 struct TracedBox {
@@ -240,8 +207,8 @@ auto fmap(F&& f, TracedBox<T> const& b) {
 // ...........................................................................
 // FIXME(B) — EagerBox: the optimisation that wasn't
 //
-// A colleague noticed that when f maps a type to itself (an endomorphism),
-// "applying it an extra time exercises the cache better". Review escaped.
+// When f maps a type to itself (an endomorphism), fmap applies f twice
+// instead of once, on the theory that "it exercises the cache better".
 //
 // PREDICT before enabling the tests — this one is sneakier than (A). Work
 // it on paper first, with f = times2, g = plus1, starting value 1:
@@ -254,21 +221,13 @@ auto fmap(F&& f, TracedBox<T> const& b) {
 //   fmap(id, ...) double-applies id — but id . id == id, so the identity
 //   law PASSES. The composition law does not: the left side applies
 //   (g . f) twice — g f g f, value 7 — while the right side applies f
-//   twice then g twice — g g f f, value 6. The two laws are independent
-//   witnesses here, and only one of them saw the crime.
+//   twice then g twice — g g f f, value 6. Only one checker catches this,
+//   which is why step 2 made you write both.
 //
-//   Why this cannot happen in Haskell: fmap :: (a -> b) -> f a -> f b is
-//   PARAMETRIC — it cannot inspect a or b — so by the free theorem the
-//   identity law alone forces the composition law. C++ templates are not
-//   parametric: if constexpr over std::is_same_v, explicit and partial
-//   specialisations, and constrained overloads can all branch on the
-//   types. No parametricity, no free theorem — which is exactly why
-//   step 2 made you write BOTH checkers.
-//
-//   The repair: delete the branch. A lawful fmap is oblivious to what T
-//   and U are. Then answer QUESTION(B): name two other C++ mechanisms
-//   (besides if constexpr + is_same) that could smuggle this same
-//   violation past a reader.
+//   The repair: delete the branch. A lawful fmap must not care what T and
+//   U are. Then answer QUESTION(B): name two other C++ mechanisms (besides
+//   if constexpr + is_same) that could smuggle this same violation past a
+//   reader.
 // ...........................................................................
 template <class T>
 struct EagerBox {
@@ -291,31 +250,27 @@ auto fmap(F&& f, EagerBox<T> const& b) {
 // STEP 4 — MaybeBox: a functor with actual structure
 //
 // SPEC
-//   MaybeBox is the Maybe functor: object map T |-> 1 + T (an empty state
-//   or a value). Storage is given below — std::optional<T>.
+//   MaybeBox wraps std::optional<T>: either empty or holding a value.
 //   * fmap applies f to the contents IF PRESENT; an empty box maps to an
 //     empty box AT THE MAPPED TYPE:
 //       fmap(show, MaybeBox<int>{}) == MaybeBox<std::string>{}
 //   * Both step-2 checkers must pass for empty and full boxes, WITHOUT
-//     writing a single new line of law code. That is the payoff of
-//     generic checkers — and the real test of your step-2 signatures.
+//     writing a single new line of law code.
 //
 // HINTS
-//   * The shape — empty or engaged — IS this functor's structure. fmap
-//     acts on contents only and transports the shape untouched.
+//   * fmap acts on contents only and leaves the empty/engaged shape
+//     untouched.
 //   * Compute the target type once:
 //       using U = std::remove_cvref_t<std::invoke_result_t<F&, T const&>>;
-//     Both branches must name one and the same return type, so aggregate
-//     CTAD alone cannot carry you here — the empty branch has nothing to
+//     Both branches must name the same return type, so aggregate CTAD
+//     alone cannot carry you here — the empty branch has nothing to
 //     deduce from. Spell MaybeBox<U> in both.
 //   * The wrong turn, rhyming with FIXME(A): "helpfully" producing
 //     f(T{}) for the empty case manufactures a value out of structure.
-//     fmap(id, empty) would no longer be empty, and the identity law dies
-//     the same death TracedBox died.
-//   * Half of structure preservation comes free from the type system:
-//     returning MaybeBox<T>{} from the empty branch will not even compile
-//     once f is heterogeneous. Type errors as the cheap first line of law
-//     enforcement.
+//     fmap(id, empty) would no longer be empty, breaking the identity law.
+//   * Returning MaybeBox<T>{} from the empty branch will not even compile
+//     once f is heterogeneous — the type mismatch catches the mistake at
+//     compile time.
 //   * std::optional already compares correctly (empty == empty; engaged
 //     values compare through), so the defaulted operator== lifts right.
 //
@@ -346,28 +301,21 @@ auto fmap(F&& f, MaybeBox<T> const& b) {
 //     lift(f)(box) == fmap(f, box)          for EVERY box type in the file
 //   Consequently lift(lift(f)) maps through two layers:
 //     lift(lift(f)) applied to a Box<MaybeBox<T>> touches the innermost T.
-//   The composite Box ∘ MaybeBox is itself a functor. The tests spell its
-//   two laws by hand; PROVE(5) asks you for the paper version.
+//   The tests spell out both laws by hand for this nested case; PROVE(5)
+//   asks for the general argument as a comment.
 //
 // HINTS
-//   * Why lift must exist at all in C++: fmap here is an OVERLOAD SET of
-//     function templates — not a value. It cannot be captured, stored, or
-//     passed; partial(fmap, f) from the currying exercise cannot even
-//     name it. lift wraps the unqualified call in a generic lambda — a
-//     hand-rolled niebloid — restoring first-class status.
+//   * Why lift needs to exist: fmap here is an OVERLOAD SET of function
+//     templates, not a value — it cannot be captured, stored, or passed
+//     around. lift wraps the unqualified call in a generic lambda,
+//     turning it back into a first-class callable.
 //   * Inside lift, call fmap UNQUALIFIED. The call is dependent, so
 //     candidates are gathered at instantiation via argument-dependent
 //     lookup: one lift serves every functor in the file, including any
-//     defined after lift itself. This is the closest C++ comes to "the"
-//     typeclass method.
+//     defined after lift itself.
 //   * Capture f by value; take the box by const&.
-//   * Categorically: lift IS the morphism map, curried. And functor
-//     composition is literally composition of lifts:
-//       (F ∘ G)<T>  =  F<G<T>>          (F ∘ G)(f)  =  lift_F(lift_G(f))
-//     Nothing new needs implementing for the composite — that is the
-//     theorem, and the tests below are its machine-checked shadow.
-//   * PROVE(5), as a comment, two lines per law: show that F ∘ G inherits
-//     lawfulness from F and G.
+//   * PROVE(5), as a comment, two lines per law — show that nesting two
+//     lifts still satisfies identity and composition:
 //       identity:     lift(lift(id)) == lift(id)   [ G's identity law ]
 //                                    == id         [ F's identity law ]
 //       composition:  analogous — use each functor's composition law
@@ -503,8 +451,8 @@ int main() {
         assert(lift(lift(plus1))(nested) == Box{MaybeBox<int>{21}});
         assert(lift(lift(plus1))(hollow) == hollow);  // inner shape survives both layers
 
-        // the composed functor's laws, spelled by hand — the machine-
-        // checked shadow of PROVE(5)
+        // both functor laws, checked by hand on the nested case (see
+        // PROVE(5))
         assert(lift(lift(id))(nested) == nested);
         assert(lift(lift(compose(plus1, times2)))(nested)
                == lift(lift(plus1))(lift(lift(times2))(nested)));
