@@ -1,5 +1,5 @@
 // ===========================================================================
-// The Box Model of Applicatives in C++ — TODO/FIXME exercise (detailed hints)
+// The Box Model of Applicatives in C++ — TODO/FIXME exercise
 //
 // One file, five steps, several kinds of work:
 //   TODO(n)   — implement from scratch.
@@ -16,13 +16,12 @@
 //   Build : g++ -std=c++20 -Wall -Wextra -o applicative box_applicative_todo.cpp
 //   Run   : ./applicative
 //
-// Where this sits
-//   The functor exercise gave each Box a morphism map, fmap, transporting
-//   ONE plain function into the box. Applicative is the next rung: it lets
-//   BOXED functions meet boxed arguments. The data, per functor F:
-//     * pure : T -> F<T>                      (embed a value, effect-free)
-//     * ap   : F<(T -> U)> x F<T> -> F<U>     (apply a boxed function)
-//   subject to four laws (step 2 makes them executable):
+// The contract
+//   Builds on the functor exercise's fmap. Each functor F now also needs
+//     pure : T -> F<T>                      (embed a value, effect-free)
+//     ap   : F<(T -> U)> x F<T> -> F<U>     (apply a boxed function)
+//   subject to four laws (step 2 makes them executable), checked UP TO
+//   operator==:
 //     identity       ap(pure(id), v)              ==  v
 //     homomorphism   ap(pure(f), pure(x))         ==  pure(f(x))
 //     interchange    ap(u, pure(y))               ==  ap(pure($y), u)
@@ -31,23 +30,8 @@
 //                                                 ==  ap(u, ap(v, w))
 //                    where comp is CURRIED composition: comp(f)(g)(x) = f(g(x))
 //
-//   Equivalently — and this file builds the bridge in step 3 — an
-//   applicative is a lax monoidal endofunctor: a unit 1 -> F(1) and a
-//   tensor zip : F<A> x F<B> -> F<pair<A, B>>, suitably coherent. The two
-//   presentations reconstruct each other.
-//
-//   The effects reading: F<T> is "a T, plus an effect". Box adds nothing
-//   (the Identity applicative); MaybeBox adds possible absence; LoggedBox
-//   adds a monoid annotation (Writer). ap runs two effects and combines
-//   them INDEPENDENTLY — neither effect can observe the other's value.
-//   That independence is the entire character of applicative (and why an
-//   Async applicative may run its effects in parallel). Step 4 closes on
-//   the question this independence leaves open.
-//
-//   Honesty footnote, as before: every law here is checked UP TO
-//   operator==. And a warning learned the hard way in the functor file:
-//   some defects are invisible to the famous laws, and only the obscure
-//   ones convict. Step 5 is built on that.
+//   A warning learned the hard way: some defects are invisible to some
+//   laws, and only the less obvious ones convict. Step 5 is built on that.
 //
 // Ground rules
 //   * Standard library only.
@@ -116,23 +100,18 @@ auto fmap(F&& f, MaybeBox<T> const& b) {
 //
 // HINTS
 //   * ap is a free function template overloaded per functor, exactly like
-//     fmap: its boxed arguments carry the functor's type, so unqualified
-//     calls + ADL dispatch it from generic code. Nothing new there.
-//   * pure is where C++ shows a seam — QUESTION(1): why can pure NOT be
-//     an overload set the way fmap and ap are? Think before reading on.
-//     Because pure's only parameter is a bare T: no argument names the
-//     functor, C++ has no return-type-directed overload resolution, and
-//     there is no compiler-inferred typeclass dictionary to consult. The
-//     functor must be NAMED at every pure call. This file's convention:
-//     each functor supplies its pure as a first-class callable (an inline
-//     constexpr lambda), and generic code RECEIVES pure as an explicit
-//     parameter. You will be hand-carrying the dictionary that Haskell
-//     passes invisibly — watch how often it travels.
+//     fmap: unqualified calls + ADL dispatch it from generic code.
+//   * pure can't be dispatched the same way — its only parameter is a
+//     bare T, so nothing in the call names the functor. QUESTION(1): why
+//     does that rule out pure being an overload set? This file's
+//     convention: each functor supplies its own pure as a callable (an
+//     inline constexpr lambda), and generic code takes pure as an
+//     explicit parameter, as you'll see from step 2 onward.
 //   * box_pure: take x by value, move it in, let aggregate CTAD deduce
-//     Box<decayed T> — the same route fmap took in the functor exercise.
+//     Box<decayed T>.
 //   * Box's ap: unwrap both, std::invoke the function payload on the
-//     value payload (invoke, as always, so member pointers stay welcome),
-//     rebox via CTAD. One line.
+//     value payload (invoke, so member pointers stay welcome), rebox via
+//     CTAD. One line.
 //
 // SHAPE
 //     inline constexpr auto box_pure = [](auto x) { return <...>; };
@@ -164,37 +143,29 @@ auto ap(Box<Fn> const& ff, Box<T> const& fx) {
 //   ap_composition_law(pure, u, v, w)  ==  (ap(ap(ap(pure(ccompose), u), v), w)
 //                                             == ap(u, ap(v, w)))
 //   * All checkers are generic over the functor: they take the functor's
-//     pure as their first parameter (QUESTION(1) is why) and find ap by
-//     unqualified call. They must work unchanged for Box now and for
-//     MaybeBox and LoggedBox later.
+//     pure as their first parameter and find ap by unqualified call. They
+//     must work unchanged for Box now and for MaybeBox and LoggedBox
+//     later.
 //
 // HINTS
-//   * ccompose is CURRIED composition, one argument per application —
-//     three nested unary lambdas, everything captured by value. You have
-//     built exactly this before; do it from muscle memory. Why curried?
-//     Because ap feeds a boxed function ONE boxed argument at a time:
-//     every multi-argument function entering the boxed world must be
-//     curried first. This is the moment currying stops being a party
-//     trick.
-//   * What each law is FOR — keep these one-liners next to the code:
+//   * ccompose is CURRIED composition — three nested unary lambdas,
+//     everything captured by value. ap only ever feeds a boxed function
+//     ONE boxed argument at a time, so any multi-argument function
+//     entering the boxed world has to be curried first.
+//   * What each law checks, in plain terms:
 //       identity      pure lifts id to the identity on F: pure adds no
 //                     effect.
 //       homomorphism  purely-pure computations collapse to pure of the
-//                     plain result: the boxed world contains an exact
-//                     copy of the unboxed one.
+//                     plain result.
 //       interchange   a pure argument commutes past an effectful
 //                     function.
 //       composition   boxed composition reassociates like plain
-//                     composition: bracketing is invisible.
-//     Together the four pin (pure, ap) down enough that the induced
-//     functor  f |-> ap(pure(f), ·)  is lawful — step 3 checks its
-//     agreement with fmap by machine.
+//                     composition.
 //   * interchange's $y — "apply-to-y" — is a small lambda capturing y by
 //     value and invoking its argument on it. Build it inside the checker.
-//   * Foreshadowing, worth reading twice: step 5 ships a defect to which
-//     identity and homomorphism are provably blind; only interchange and
-//     composition convict. If the last two laws ever felt ceremonial,
-//     they are about to earn their keep.
+//   * Worth remembering for step 5: it ships a defect to which identity
+//     and homomorphism are blind — only interchange and composition
+//     convict it.
 //   * std::invoke wherever a user-supplied callable is applied.
 //
 // SHAPE
@@ -247,17 +218,17 @@ auto ap_composition_law(Pure pure, U const& u, V const& v,
 }
 
 // ---------------------------------------------------------------------------
-// STEP 3 — lift2, zip, and the lax monoidal bridge
+// STEP 3 — lift2, zip, and the fmap bridge
 //
 // SPEC
 //   lift2(pure, f, fa, fb)     applies a PLAIN binary f under the boxes:
 //     lift2(box_pure, plus, Box{20}, Box{22}) == Box{42}
-//   zip_boxes(pure, fa, fb)    is the monoidal tensor:
+//   zip_boxes(pure, fa, fb)    pairs two boxes up:
 //     F<A> x F<B> -> F<std::pair<A, B>>
 //   ap_via_zip(pure, ff, fx)   rebuilds ap from zip + fmap, and must
 //     agree with ap on every functor in the file.
-//   Also pinned by a test: the applicative's induced functor agrees with
-//   the fmap you already had —  ap(pure(f), b) == fmap(f, b).
+//   Also pinned by a test: ap(pure(f), b) == fmap(f, b) — the applicative
+//     agrees with the fmap you already had.
 //
 // HINTS
 //   * lift2: ap applies one boxed argument at a time, so f must be
@@ -265,29 +236,18 @@ auto ap_composition_law(Pure pure, U const& u, V const& v,
 //     taking a, returning an inner lambda capturing f and a, taking b,
 //     invoking f(a, b). Then
 //       ap(ap(pure(curried_f), fa), fb)
-//     — and note that the inner ap(pure(...), fa) is exactly the induced
-//     fmap.
+//     — the inner ap(pure(...), fa) is exactly fmap.
 //   * zip_boxes: no new machinery — it IS lift2 of the pairing function
 //     [](auto a, auto b) { return std::pair{ ... }; }. Move a and b into
 //     the pair; CTAD names the pair type.
 //   * ap_via_zip: zip the function box with the value box, then fmap the
 //     evaluator p |-> invoke(p.first, p.second) over the result.
-//   * Two presentations of one structure:
-//       (pure, ap)     the programmer's applicative;
-//       (unit, zip)    the lax monoidal functor — unit : 1 -> F(1) is
-//                      pure of a unit value, zip is the tensor.
-//     Each direction of the bridge is one line through the other's
-//     vocabulary; the round trip must land where it started (the test
-//     compares ap_via_zip against ap directly).
-//   * QUESTION(3): match each of the four ap laws to the monoidal
-//     coherence datum it shadows — left unitor, right unitor, associator,
-//     naturality of the tensor. One line per law. The exact dictionary is
-//     subtle and certainty is not required; the mapping intuition is the
-//     exercise.
+//   * QUESTION(3): pure/ap and zip_boxes describe the same structure two
+//     different ways. In one line, say how you'd get ap back from zip
+//     alone — you're about to write exactly that as ap_via_zip.
 //   * PROVE(3), two lines: using homomorphism alone, show that
-//     ap(pure(f), pure(x)) and fmap(f, pure(x)) must agree for a lawful
-//     instance whose fmap is the induced one. The test then checks the
-//     agreement numerically on a non-pure box too.
+//     ap(pure(f), pure(x)) and fmap(f, pure(x)) must agree. The test then
+//     checks the agreement numerically on a non-pure box too.
 //
 // SHAPE
 //     template <class Pure, class F2, class FA, class FB>
@@ -337,30 +297,22 @@ auto ap_via_zip(Pure pure, FF const& ff, FX const& fx) {
 // HINTS
 //   * maybe_pure cannot lean on aggregate CTAD the way box_pure did:
 //     MaybeBox's member is std::optional<T>, and aggregate deduction
-//     guides do not invert optional's converting constructor — there is
-//     no deducing T from a bare int through optional<T>. Spell the type:
+//     guides do not invert optional's converting constructor. Spell the
+//     type:
 //       MaybeBox<std::decay_t<decltype(x)>>{std::move(x)}
-//     A small asymmetry worth remembering: CTAD sees through members OF
-//     the deduced type itself, not through members that merely convert.
 //   * ap: the same both-branches-must-name-one-type discipline as
 //     MaybeBox's fmap. Compute
 //       using U = std::remove_cvref_t<std::invoke_result_t<Fn const&, T const&>>;
 //     once; return MaybeBox<U>{ ... } when both slots are engaged,
 //     MaybeBox<U>{} otherwise. Note which Fn the trait mentions: the
-//     STORED function type — the boxed function is data here, and the
-//     trait mirrors invoking it out of a const box.
-//   * Absence is an effect, and ap combines effects: an absent FUNCTION
-//     annihilates just as thoroughly as an absent argument. The tests pin
-//     both directions.
-//   * QUESTION(4) — the door applicative cannot open. lift2 consults both
-//     boxes no matter what; the SHAPE of the computation is fixed before
-//     any value is seen. Write, in a comment (signature only, no code),
-//     the operation you would need for the SECOND box to be CHOSEN by
-//     the value inside the first — and name the structure that provides
-//     it. That structure is the next exercise. Flip side, worth stating
-//     in your answer: the rigidity you just bumped into is exactly why
-//     applicative effects are statically analysable — and why an Async
-//     functor may run both effects in parallel.
+//     STORED function type — the boxed function is data here.
+//   * An absent FUNCTION annihilates just as thoroughly as an absent
+//     argument. The tests pin both directions.
+//   * QUESTION(4): lift2 always consults both boxes, no matter what — the
+//     shape of the computation is fixed before any value is seen. Write,
+//     in a comment (signature only, no code), the operation you'd need
+//     for the SECOND box to be CHOSEN by the value inside the first. That
+//     operation is the next exercise.
 //
 // SHAPE
 //     inline constexpr auto maybe_pure = [](auto x) {
@@ -386,57 +338,46 @@ auto ap(MaybeBox<Fn> const& ff, MaybeBox<T> const& fx) {
 // ---------------------------------------------------------------------------
 // STEP 5 — LoggedBox: the Writer applicative, shipped with two defects
 //
-// LoggedBox annotates a value with a std::string log; the annotation
-// monoid is ("", +). The lawful instance: pure attaches the EMPTY log
-// (the monoid unit), and ap appends the function box's log, then the
-// argument box's log, EACH EXACTLY ONCE:
+// LoggedBox annotates a value with a std::string log. The lawful
+// instance: pure attaches the EMPTY log, and ap appends the function
+// box's log, then the argument box's log, EACH EXACTLY ONCE:
 //     value :  ff.value applied to fx.value
 //     log   :  ff.log + fx.log
 // The functor layer below is given and lawful — fmap transports the
-// annotation untouched.  pure and ap ship broken.
+// annotation untouched. pure and ap ship broken.
 //
 // SPEC (post-repair)
 //   All four checkers pass; lift2 concatenates logs left-to-right, once
-//   each; ap_via_zip agrees with ap — the step-3 bridge cashing its
-//   genericity cheque on a third functor.
+//   each; ap_via_zip agrees with ap.
 //
 // The bug hunt — read before flipping STEP5_READY
-//   Two INDEPENDENT defects sit in the shipped code below. The tests are
-//   ordered as two acts:
+//   Two INDEPENDENT defects sit in the shipped code below. The tests run
+//   in two acts:
 //     Act 1: identity and homomorphism run first. PREDICT their verdicts
-//       on the shipped code. Any conviction here is FIXME(A)'s doing —
-//       and here is the claim to verify on paper, QUESTION(5a): identity
-//       and homomorphism are provably BLIND to FIXME(B). (Look at whose
-//       log FIXME(B) mangles, and what those two laws ever put in that
-//       position.)
+//       on the shipped code. Any conviction here is FIXME(A)'s doing.
+//       QUESTION(5a): identity and homomorphism are provably BLIND to
+//       FIXME(B) — look at whose log FIXME(B) mangles, and what those two
+//       laws ever check in that position.
 //     Act 2: fix (A) alone, re-run. Identity and homomorphism go green —
 //       and interchange convicts. PREDICT, before fixing (B): which half
-//       of the four-law verdict sheet flips when (B) is repaired, and
-//       why? You met this phenomenon in the functor exercise (EagerBox:
-//       the famous law passes, another convicts). Same lesson, one rung
-//       up: the laws are independent witnesses, and some defects are
-//       visible only to the unglamorous ones.
+//       of the four-law verdict sheet flips, and why?
 //
-//   FIXME(A) — pure stamps provenance. "Knowing a value was born pure is
-//     useful for the dashboard," said the author, attaching "pure " to
-//     every pure's log. But the unit of the annotation monoid is
-//     load-bearing: pure must be EFFECT-FREE, and here effect-free means
-//     the empty log. Nothing less is the unit; nothing else is lawful.
-//   FIXME(B) — ap duplicates the function box's log. "The function
-//     side's provenance kept getting lost in long chains, so it is
-//     recorded twice to make sure it survives." Each log, once. Effect
-//     ARITHMETIC — unit, single occurrence, associativity — is the law.
+//   FIXME(A) — pure stamps every log with "pure ", on the theory that
+//     it's useful provenance for a dashboard. But pure must be
+//     EFFECT-FREE — here that means the empty log. Nothing less is the
+//     unit; nothing else is lawful.
+//   FIXME(B) — ap appends the function box's log twice, "so it survives
+//     long chains." Each log should appear exactly once.
 //   QUESTION(5b), answer after both repairs: swapping the concatenation
-//     to fx.log + ff.log would NOT be a bug — that is the Dual monoid /
-//     Backwards instance, a DIFFERENT lawful applicative sequencing
-//     effects right-to-left. Effect ORDER is a design choice; effect
-//     arithmetic is not. Say in one line how you would detect, from
-//     outside, which of the two lawful orders a given instance uses.
+//     to fx.log + ff.log would NOT be a bug — it's a different, equally
+//     lawful instance that sequences effects right-to-left instead. Say
+//     in one line how you'd detect, from outside, which of the two
+//     orders a given instance uses.
 // ---------------------------------------------------------------------------
 template <class T>
 struct LoggedBox {
     T value;
-    std::string log;  // annotation monoid: unit "", operation +
+    std::string log;  // combines with "" as identity, + as the operation
     friend bool operator==(LoggedBox const&, LoggedBox const&) = default;
 };
 
@@ -453,7 +394,7 @@ inline constexpr auto logged_pure = [](auto x) {
 
 template <class Fn, class T>
 auto ap(LoggedBox<Fn> const& ff, LoggedBox<T> const& fx) {
-    // FIXME(B): "recorded twice to make sure it survives."
+    // FIXME(B): the function box's log is appended twice.
     return LoggedBox{std::invoke(ff.value, fx.value),
                      ff.log + ff.log + fx.log};
 }
@@ -514,13 +455,13 @@ int main() {
     {
         auto plus1 = [](int x) { return x + 1; };
 
-        // the applicative's induced functor agrees with fmap — PROVE(3)'s
-        // numeric shadow, checked on a non-pure box
+        // ap(pure(f), b) must equal fmap(f, b) — PROVE(3), checked here
+        // numerically on a non-pure box
         assert(ap(box_pure(plus1), Box{41}) == fmap(plus1, Box{41}));
 
         assert(lift2(box_pure, std::plus<>{}, Box{20}, Box{22}) == Box{42});
 
-        // the tensor — catches pairing that drops or reorders components
+        // zip_boxes — catches pairing that drops or reorders components
         assert((zip_boxes(box_pure, Box{1}, Box{std::string{"a"}})
                 == Box{std::pair{1, std::string{"a"}}}));
 
@@ -583,7 +524,7 @@ int main() {
         assert(ap_homomorphism_law(logged_pure, plus1, 5));
 
         // Act 2 — green above, yet still convicting here until FIXME(B)
-        // is repaired: the unglamorous laws earn their keep
+        // is repaired
         assert((ap_interchange_law(logged_pure,
                                    LoggedBox{plus1, std::string{"u"}}, 9)));
         assert((ap_composition_law(logged_pure,
@@ -598,7 +539,7 @@ int main() {
                       LoggedBox{2, std::string{"R"}})
                 == LoggedBox{3, std::string{"LR"}}));
 
-        // the step-3 bridge, cashing its genericity cheque on functor #3
+        // ap_via_zip checked on a third functor — the step-3 bridge
         assert((ap_via_zip(logged_pure, LoggedBox{plus1, std::string{"f"}},
                            LoggedBox{41, std::string{"x"}})
                 == ap(LoggedBox{plus1, std::string{"f"}},
