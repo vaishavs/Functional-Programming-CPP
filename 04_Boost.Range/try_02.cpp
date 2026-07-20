@@ -1,13 +1,3 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <boost/range/adaptors.hpp>
-#include <boost/range/algorithm.hpp>
-#include <boost/range/algorithm_ext.hpp>
-
-using namespace std;
-using namespace boost::adaptors;
-
 // =============================================================================
 // Boost.Range bug-hunting exercise — ANNOTATED EDITION
 // =============================================================================
@@ -41,6 +31,16 @@ using namespace boost::adaptors;
 //   - `remove_if` rearranges without shrinking; pair it with `.erase()` or
 //     use `remove_erase_if` instead (Bug 8).
 // =============================================================================
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+
+using namespace std;
+using namespace boost::adaptors;
 
 int main() {
     vector<int> nums = {1, 2, 3, 4, 5};
