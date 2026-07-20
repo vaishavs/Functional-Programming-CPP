@@ -1,5 +1,5 @@
 // ===========================================================================
-// The Box Model of Monads in C++ — TODO/FIXME exercise (detailed hints)
+// The Box Model of Monads in C++ — TODO/FIXME exercise
 //
 // One file, five steps, several kinds of work:
 //   TODO(n)     — implement from scratch.
@@ -18,41 +18,26 @@
 //   Build : g++ -std=c++20 -Wall -Wextra -o monad box_monad_todo.cpp
 //   Run   : ./monad
 //
-// Where this sits — the last rung of the trilogy
-//   The functor exercise transported ONE plain function into a box. The
-//   applicative let boxed functions meet boxed arguments — but combined
-//   their effects INDEPENDENTLY: the shape of the whole computation was
-//   fixed before any value was seen, and QUESTION(4) of that file asked
-//   for the operation applicative cannot express. This file is the
-//   answer. The data, per functor M:
-//     * pure  : T -> M<T>                       (unchanged, still the unit)
-//     * mbind : M<T> x (T -> M<U>) -> M<U>      (sequence: the NEXT
-//                                                computation is PRODUCED
-//                                                from the current value)
-//   subject to three laws (step 2 makes them executable):
+// The contract
+//   Builds on fmap (functor exercise) and pure (applicative exercise).
+//   Each monad M now also needs
+//     mbind : M<T> x (T -> M<U>) -> M<U>
+//   where the continuation (T -> M<U>) PRODUCES the next box from the
+//   current value — the thing applicative's ap could not do. Three laws
+//   (step 2 makes them executable), checked UP TO operator==:
 //     left identity    mbind(pure(x), k)  ==  k(x)
 //     right identity   mbind(m, pure)     ==  m
 //     associativity    mbind(mbind(m, k), h)
 //                          ==  mbind(m, x |-> mbind(k(x), h))
 //
-//   Two more presentations, both built here:
-//     * Kleisli (step 3): arrows T -> M<U>, with pure as the identity and
-//       "fish" composition. The three monad laws ARE the three category
-//       laws of Kleisli(M), token for token.
-//     * join (step 4): mjoin : M<M<T>> -> M<T>, with
-//       mbind(m, k) = mjoin(fmap(k, m)). The categorical costume: a monad
-//       is a monoid in the endofunctors — mu = join, eta = pure.
+//   Two more operations built here: kfish (step 3), which composes two
+//   continuations into one, and mjoin (step 4), which flattens M<M<T>>
+//   into M<T> with mbind(m, k) = mjoin(fmap(k, m)).
 //
-//   The price of the new power, stated up front: once the next box is
-//   chosen by a value, the computation's shape is DYNAMIC. Applicative's
-//   static analysability — and an Async functor's licence to run effects
-//   in parallel — are exactly what mbind trades away.
-//
-//   Honesty footnotes, third edition: laws are checked UP TO operator==;
-//   Kleisli arrows are functions, so THEIR equality is checked
-//   extensionally, at sample points. And the drumbeat from both earlier
-//   files continues: some defects are invisible to some laws. Step 5
-//   sharpens it to a point — one defect per law, one law per defect.
+//   Kleisli arrows (the k, h continuations) are functions, so tests that
+//   compare them do it extensionally, at sample points, not with ==. And
+//   as in the earlier two files: some defects are invisible to some laws.
+//   Step 5 sharpens that to one defect per law, one law per defect.
 //
 // Ground rules
 //   * Standard library only.
@@ -81,7 +66,7 @@
 
 // ---------------------------------------------------------------------------
 // Given — carried over from the functor and applicative exercises, lawful
-// as you left them (LoggedBox's pure ships post-repair: the monoid unit).
+// as you left them (LoggedBox's pure ships post-repair, with an empty log).
 // ---------------------------------------------------------------------------
 inline constexpr auto id = [](auto&& x) -> decltype(auto) {
     return std::forward<decltype(x)>(x);
@@ -95,10 +80,9 @@ struct Box {
 
 template <class F, class T>
 auto fmap(F&& f, Box<T> const& b) {
-    // Deliberately route (b) from the functor exercise: CTAD's
-    // copy-deduction candidate makes Box{expr} a COPY when expr is
-    // already a Box, silently collapsing Box<Box<U>> to Box<U>. Join
-    // (step 4) needs genuine nesting, so the target type is spelled.
+    // CTAD's copy-deduction candidate makes Box{expr} a COPY when expr
+    // is already a Box, silently collapsing Box<Box<U>> to Box<U>. Step
+    // 4's join needs genuine nesting, so the target type is spelled out.
     using U = std::remove_cvref_t<std::invoke_result_t<F&, T const&>>;
     return Box<U>{std::invoke(f, b.value)};
 }
@@ -129,7 +113,7 @@ inline constexpr auto maybe_pure = [](auto x) {
 template <class T>
 struct LoggedBox {
     T value;
-    std::string log;  // annotation monoid: unit "", operation +
+    std::string log;  // combines with "" as identity, + as the operation
     friend bool operator==(LoggedBox const&, LoggedBox const&) = default;
 };
 
@@ -162,19 +146,16 @@ inline constexpr auto logged_pure = [](auto x) {
 //     Box<Box<U>>, and the tests will not even compile against it: the
 //     type system convicts before the laws get a chance.
 //   * One line: invoke k on the payload, return the result. std::invoke,
-//     as always. The deduced return type is k's business — auto decays
-//     whatever invoke yields.
-//   * Box is the Identity monad: "then" with no effect between the
-//     steps. It exists so the algebra of steps 2–3 can be studied with
-//     the effects switched off; MaybeBox switches them on in step 4.
-//   * QUESTION(1) — naming lore, learned the hard way in real codebases:
-//     why is this mbind and not bind? Unqualified calls are how generic
-//     code finds the right overload (ADL, as in both earlier files). But
-//     ADL cuts both ways: the moment a box's template argument is a std
-//     type — Box<std::string> arrives in step 2 — namespace std becomes
-//     an ASSOCIATED namespace, and an unqualified bind(...) drags
-//     std::bind into the overload set. Ambiguity or worse. ADL giveth
-//     and ADL taketh away; name accordingly.
+//     as always. The deduced return type is k's business.
+//   * Box just passes values through unchanged, so steps 2–3 can study
+//     the mbind/kfish machinery before MaybeBox adds real effects in
+//     step 4.
+//   * QUESTION(1): why is this mbind and not bind? Unqualified calls are
+//     how generic code finds the right overload (ADL). But once a box's
+//     template argument is a std type — Box<std::string> arrives in step
+//     2 — namespace std becomes an ASSOCIATED namespace, and an
+//     unqualified bind(...) drags std::bind into the overload set.
+//     Ambiguity or worse. Name accordingly.
 //
 // SHAPE
 //     template <class T, class K>
@@ -195,13 +176,12 @@ auto mbind(Box<T> const& m, K&& k) {
 //   right_identity_law(pure, m)     ==  (mbind(m, pure) == m)
 //   associativity_law(m, k, h)      ==  (mbind(mbind(m, k), h)
 //                                          == mbind(m, x |-> mbind(k(x), h)))
-//   * Generic over the functor: pure travels as an explicit parameter
-//     (the hand-carried dictionary, third file running), mbind is found
-//     by unqualified call + ADL. Unchanged for Box now, MaybeBox and
-//     LoggedBox later.
+//   * Generic over the functor: pure travels as an explicit parameter,
+//     mbind is found by unqualified call + ADL. Unchanged for Box now,
+//     MaybeBox and LoggedBox later.
 //
 // HINTS
-//   * What each law is FOR — the practical readings:
+//   * What each law is FOR:
 //       left identity    entering the boxed world through pure and
 //                        immediately binding is just calling k: pure is
 //                        a frictionless ENTRY.
@@ -209,12 +189,11 @@ auto mbind(Box<T> const& m, K&& k) {
 //                        is a frictionless EXIT.
 //       associativity    THE refactoring law. Extracting any sub-chain
 //                        of binds into a named helper cannot change
-//                        behaviour — the semicolon associates. Without
-//                        it, "pull this pipeline stage into a function"
-//                        would be a semantic gamble.
-//   * Notice which checker takes no pure: associativity. Unit and
-//     multiplication are separate pieces of data — a split that step 4's
-//     join presentation makes official (eta and mu).
+//                        behaviour. Without it, "pull this pipeline
+//                        stage into a function" would be a semantic
+//                        gamble.
+//   * Notice which checker takes no pure: associativity. It's a separate
+//     piece of data from mbind, not derived from it.
 //   * The composed continuation inside the associativity checker is a
 //     small lambda capturing k and h by value, taking x by const&, and
 //     binding k's result into h. Build it inside the checker.
@@ -253,41 +232,24 @@ auto associativity_law(M const& m, K k, H h) {  // deduces bool once implemented
 }
 
 // ---------------------------------------------------------------------------
-// STEP 3 — the Kleisli category: where the laws come from
+// STEP 3 — kfish: composing two continuations into one
 //
 // SPEC
 //   kfish(k, h)(x)  ==  mbind(k(x), h)         ("k, then h", as one arrow)
-//   And the theorem the tests shadow: for a lawful monad M, the following
-//   is a CATEGORY —
-//     objects        C++ types
-//     arrow T ~> U   any callable T -> M<U>
-//     identity       pure               (it has exactly the arrow shape)
-//     composition    kfish
-//   with the three monad laws serving, verbatim, as its three category
-//   laws.
 //
 // HINTS
 //   * kfish: capture k and h by value; return a lambda taking x by
 //     const&, binding k's result into h. It is the associativity
 //     checker's composed continuation, promoted to a first-class
 //     combinator.
-//   * PROVE(3) — three one-liners. Unfold kfish's definition inside each
-//     category law and watch a monad law appear, token for token:
+//   * PROVE(3) — three one-liners. Substitute kfish's definition into
+//     each line below and a monad law falls out directly:
 //       kfish(pure, k)(x) == k(x)        <->  left identity
 //       kfish(k, pure)(x) == k(x)        <->  right identity
 //       kfish(kfish(k, h), g) == kfish(k, kfish(h, g))
 //                                        <->  associativity
-//     No cleverness required — substitution only. That is the point: the
-//     monad laws are not LIKE category laws; after unfolding they ARE
-//     them. A monad on C is exactly the data needed to equip C's objects
-//     with a second, effectful arrow-world.
-//   * The practical gloss, worth keeping: programs in an effectful DSL
-//     are Kleisli arrows, and ; is kfish. The refactoring law of step 2
-//     is Kleisli associativity wearing overalls.
-//   * Testing note (the honesty footnote's next installment): arrows are
-//     functions, so the tests compare them EXTENSIONALLY, at sample
-//     points. Equality of morphisms up to sampling — the third notion of
-//     equality this trilogy has had to own up to.
+//   * Testing note: k and h are functions, so the tests compare them by
+//     calling both sides at sample points, not with ==.
 //
 // SHAPE
 //     template <class K, class H>
@@ -312,50 +274,37 @@ auto kfish(K k, H h) {
 //                             every functor in the file.
 //
 // HINTS
-//   * The return-type discipline, one notch subtler than before: bind
-//     does not know U and does not need to. The CONTINUATION owns the
-//     output type. Name it once —
+//   * bind does not know U and does not need to — the CONTINUATION owns
+//     the output type. Name it once —
 //       using MU = std::remove_cvref_t<std::invoke_result_t<K&, T const&>>;
-//     — and note what MU is: k's whole RESULT BOX type, not a payload.
-//     The empty branch returns MU{}; all mbind needs from MU is that
-//     default construction means "empty".
-//   * The anti-pattern, same crime family as the functor file's
-//     value-inventing fmap and the applicative file's non-unit pure:
-//     "recovering" from an empty input by invoking k on T{} manufactures
-//     a computation out of structure. It breaks right identity —
-//     mbind(empty, pure) would resurrect a value — and the abort-test
+//     — MU is k's whole RESULT BOX type, not a payload. The empty branch
+//     returns MU{}; all mbind needs from MU is that default construction
+//     means "empty".
+//   * Do not "recover" from an empty input by invoking k on T{} — that
+//     manufactures a computation out of structure, breaks right identity
+//     (mbind(empty, pure) would resurrect a value), and the abort-test
 //     convicts it before the laws even run.
-//   * The cliffhanger, cashed: half_if_even returns a DIFFERENT box
-//     depending on the value it sees. Whether the pipeline's third stage
-//     runs at all cannot be known without running the first two. That is
-//     the power applicative lacked — and the static shape it lost.
-//   * mjoin is one line, and the line is pretty: bind with the
-//     identity-shaped continuation — mbind(mm, id). The continuation
-//     returns the inner box; auto's decay makes the copy. QUESTION(4a):
-//     why does the very id from the functor file's identity LAW work
-//     here as a continuation? (Look at what arrow shape M<T> -> M<T>
-//     has when the outer payload is itself a box.)
-//   * mbind_via_join is the categorical direction: bind = mu after M(k),
-//     i.e. mjoin(fmap(k, m)) — fmap wraps k's boxes into a second layer,
-//     join multiplies the layers away. The round-trip tests pin the
-//     agreement with the direct mbind.
-//   * A trap the Given section already defused for you, spelled out here
-//     because YOUR test tinkering will hit it: CTAD's copy-deduction
+//   * half_if_even returns a DIFFERENT box depending on the value it
+//     sees, so whether the pipeline's third stage runs at all can't be
+//     known without running the first two — that's what mbind can do
+//     that ap couldn't.
+//   * mjoin is one line: bind with the identity-shaped continuation —
+//     mbind(mm, id). QUESTION(4a): why does id work here as a
+//     continuation? (Look at what arrow shape M<T> -> M<T> has when the
+//     outer payload is itself a box.)
+//   * mbind_via_join: fmap wraps k's boxes into a second layer, join
+//     flattens the layers away — mjoin(fmap(k, m)). The round-trip tests
+//     pin the agreement with the direct mbind.
+//   * A trap your own test-tinkering could hit: CTAD's copy-deduction
 //     candidate is preferred for a single argument of the same class
-//     template, so Box{Box{7}} constructs a COPY of Box{7} — not a
+//     template, so Box{Box{7}} constructs a COPY of Box{7}, not a
 //     nesting. Every genuinely nested box in the tests spells its type
 //     in full (Box<Box<int>>, MaybeBox<MaybeBox<int>>), and Box's given
 //     fmap/pure name their target types for the same reason: a
 //     box-returning continuation fed to a CTAD-built fmap would have its
-//     nesting silently collapsed — and join would then have nothing to
-//     flatten. QUESTION(4c): which of the two would be worse to debug,
-//     and why did the functor exercise never notice?
-//   * QUESTION(4b) — the costume: with eta = pure : Id => M and
-//     mu = mjoin : M o M => M, a monad is a monoid in the endofunctors
-//     (composition as the tensor). Match each of the three bind laws to
-//     a monoid law of (M, mu, eta), one line each. Then flag the
-//     resonance: step 5 finds ANOTHER monoid making the same three laws
-//     tick — a smaller one, hiding inside a std::string.
+//     nesting silently collapsed, leaving join nothing to flatten.
+//     QUESTION(4c): which of the two would be worse to debug, and why
+//     did the functor exercise never notice?
 //
 // SHAPE
 //     template <class T, class K>
@@ -394,28 +343,24 @@ auto mbind_via_join(M const& m, K k) {
 // STEP 5 — LoggedBox: the Writer monad, shipped with a one-law defect
 //
 // The lawful instance: run the continuation on the payload, keep ITS
-// value, and multiply the annotations in order, each exactly once:
+// value, and concatenate the annotations in order, each exactly once:
 //     value :  k(m.value).value
 //     log   :  m.log + k(m.value).log
-// pure (given above, post-repair) contributes the monoid unit "".
+// pure (given above, post-repair) contributes the empty log.
 //
 // SPEC (post-repair)
 //   All three checkers pass; pipelines concatenate logs left-to-right,
 //   once each; kfish sequences annotations; mbind_via_join agrees with
-//   mbind — the join bridge cashing its genericity cheque on functor #3,
-//   with join revealed as the monoid operation in an endofunctor costume
-//   (it multiplies the two log layers).
+//   mbind.
 //
 // The bug hunt — read before flipping STEP5_READY
-//   FIXME(A) — the shipped mbind drops the continuation's log. "The
-//     continuation's scribbles were polluting the authoritative history
-//     recorded upstream," said the author, keeping m.log alone.
+//   FIXME(A) — the shipped mbind drops the continuation's log and keeps
+//     only m.log.
 //   PREDICT the full three-law verdict sheet for the shipped code before
-//   running. The claim to verify on paper first, QUESTION(5a): EXACTLY
-//   ONE law convicts. Work the log algebra for the other two — right
-//   identity survives because pure's log is the unit (nothing was there
-//   to drop), and associativity survives because BOTH bracketings drop
-//   their way down to the same m.log. One defect, one witness.
+//   running. QUESTION(5a): EXACTLY ONE law convicts — work the log
+//   algebra for the other two. Right identity survives because pure's
+//   log is the unit (nothing was there to drop); associativity survives
+//   because BOTH bracketings drop their way down to the same m.log.
 //
 //   EXPERIMENT(5b) — after repairing (A), commit a controlled sabotage:
 //   swap the log to r.log alone (the MIRROR defect — drop the input's
@@ -423,32 +368,28 @@ auto mbind_via_join(M const& m, K k) {
 //   Rebuild, verify the abort lands where you said, restore the repair.
 //   Between (A) and its mirror you will have shown: left identity
 //   watches the unit from the LEFT, right identity watches it from the
-//   RIGHT, and associativity acquits both mirrors. Three laws, three
-//   different blind spots — the trilogy's drumbeat, sharpened to one
-//   defect per law.
+//   RIGHT, and associativity acquits both.
 //
-//   PROVE(5c) — the Writer theorem, tying the file's bow: show that the
-//   value components agree in every law regardless of the log policy, so
-//   each monad law reduces EXACTLY to one law of the annotation monoid:
+//   PROVE(5c) — show that the value components agree in every law
+//   regardless of the log policy, so each monad law reduces EXACTLY to
+//   one law of the annotation's combining operation:
 //       left identity    <->   "" + a  ==  a         (left unit)
 //       right identity   <->   a + ""  ==  a         (right unit)
 //       associativity    <->   (a + b) + c  ==  a + (b + c)
-//   Conclusion: LoggedBox is a lawful monad IF AND ONLY IF the
-//   annotation is a monoid. Two lines per law; write them.
+//   Conclusion: LoggedBox is a lawful monad IF AND ONLY IF the log
+//   combines like this. Two lines per law; write them.
 //
-//   QUESTION(5d) — sink it from the annotation side: name a plausible
-//   C++ "log" type and combining operation for which correct-looking
-//   plumbing still yields an unlawful monad, and say which law dies.
-//   (Hint: there is a famous arithmetic type on every machine whose +
-//   is not associative.)
+//   QUESTION(5d) — name a plausible C++ "log" type and combining
+//   operation for which correct-looking plumbing still yields an
+//   unlawful monad, and say which law dies. (Hint: there is a common
+//   arithmetic type on every machine whose + is not associative.)
 // ---------------------------------------------------------------------------
 template <class T, class K>
 auto mbind(LoggedBox<T> const& m, K&& k) {
     auto r = std::invoke(k, m.value);
-    // FIXME(A): "the continuation's scribbles were polluting the
-    // authoritative history recorded upstream."
+    // FIXME(A): drops the continuation's log — see the discussion above.
     // (Braced-init evaluates left to right, and moving r.value does not
-    // disturb r.log — the repair may read both members of r safely.)
+    // disturb r.log, so the repair can read both members of r safely.)
     return LoggedBox{std::move(r.value), m.log};
 }
 
@@ -508,7 +449,7 @@ int main() {
         auto k_double = [](int x) { return Box{x * 2}; };
         auto k_show = [](int x) { return Box{std::to_string(x)}; };
 
-        // pure is the identity ARROW — left and right, at sample points
+        // pure acts as kfish's identity — left and right, at sample points
         assert(kfish(box_pure, k_inc)(10) == k_inc(10));
         assert(kfish(k_inc, box_pure)(10) == k_inc(10));
 
@@ -596,8 +537,8 @@ int main() {
         // Kleisli arrows carry their annotations through composition
         assert((kfish(k_log, h_log)(1) == LoggedBox{4, std::string{"kh"}}));
 
-        // the join bridge on functor #3 — join multiplies the two log
-        // layers: the monoid operation in an endofunctor costume
+        // mbind_via_join checked on a third functor — join concatenates
+        // the two log layers into one
         assert((mbind_via_join(LoggedBox{1, std::string{"a"}}, k_log)
                 == mbind(LoggedBox{1, std::string{"a"}}, k_log)));
         std::cout << "step 5  LoggedBox reformed ..... ok\n";
