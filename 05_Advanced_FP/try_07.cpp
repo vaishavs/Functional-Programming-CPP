@@ -15,8 +15,7 @@
 #include <iostream>
 #include <cctype>
 
-std::expected<std::string, std::string> to_uppercase(
-    std::expected<std::string, std::string> input)
+std::expected<std::string, std::string> to_uppercase(std::expected<std::string, std::string> input)
 {
     // TODO: replace the line below with a call to input.transform(...)
     // that returns an uppercased copy of the string.
