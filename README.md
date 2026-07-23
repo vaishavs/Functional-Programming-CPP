@@ -37,9 +37,13 @@ For more sources, refer [this page](https://www.google.com/url?sa=t&rct=j&q=&esr
 
    ii) Things to remember
 
-   iii) Examples
+   iii) Writing a custom range algorithm
 
-   iv) Exercises
+   iv) Writing a custom view adaptor
+
+   v) Examples
+
+   vi) Exercises
 5. Introduction to Boost.Range Library
 
    i) Introduction
