@@ -152,3 +152,9 @@ int main() {
     return 0;
 }
 ```
+
+Sources:
+
+* https://www.studyplan.dev/pro-cpp/implementing-iterators-ranges
+* https://www.reedbeta.com/blog/ranges-compatible-containers/
+
