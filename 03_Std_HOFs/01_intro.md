@@ -229,20 +229,6 @@ range
 ```
 These concepts are checked statically at compile time. 
 
-Verified classifications:
-
-| Range | `forward` | `bidirectional` | `random_access` | `contiguous` |
-|---|---|---|---|---|
-| `std::vector<int>` | yes | yes | yes | **yes** |
-| `std::array<int, N>` | yes | yes | yes | **yes** |
-| C array | yes | yes | yes | **yes** |
-| `std::string` / `std::string_view` | yes | yes | yes | **yes** |
-| `std::deque<int>` | yes | yes | **yes** | no |
-| `std::list<int>` | yes | **yes** | no | no |
-| `std::forward_list<int>` | **yes** | no | no | no |
-| `std::unordered_map` | **yes** | no | no | no |
-| `rv::istream<int>` | no (input only) | no | no | no |
-
 ### Three orthogonal properties
 
 * **`sized_range`** — the size is obtainable in $O(1)$ (less time) via `rg::size`. For example, a `std::vector` is sized, but a a `std::forward_list` is not (it has no $O(1)$ `size()` by design), and neither is a predicate-delimited range.
