@@ -25,6 +25,10 @@
 // Conventions used by every test
 //   * Nothing prints. Results are returned and compared with ==.
 //   * Views are lazy; a test that compares values has always materialised.
+//   * NO PROJECTIONS. No algorithm here uses the trailing projection
+//     parameter, and no callable is a pointer-to-member. Every comparator,
+//     predicate and transform is a lambda taking a whole element, and the
+//     *_if algorithm variants do the work a projection would have done.
 // ===========================================================================
 
 #include <algorithm>
@@ -126,36 +130,52 @@ auto as_sv(Tok&& /*token*/) {
 }
 
 // ===========================================================================
-// STEP 2 — algorithms with projections
+// STEP 2 — algorithms with comparators and predicates
 // ===========================================================================
 //
-// Every rg:: algorithm takes (range, comparator = {}, projection = {}).
-// The projection is applied to each element BEFORE the comparator or
-// predicate sees it, so `&Rec::score` replaces a wrapping lambda. `{}`
-// keeps the default comparator (rg::less).
+// Every rg:: algorithm here is called in its two-argument form: (range,
+// callable). The callable sees WHOLE ELEMENTS — a comparator takes two
+// Recs and returns a strict weak ordering, a predicate takes one Rec and
+// returns bool. Reaching into `.score` or `.dept` is the lambda's job.
+//
+// Two habits that follow from that:
+//   * Take lambda parameters by `Rec const&`. By value copies two strings
+//     on every comparison, and rg::sort makes O(n log n) of them.
+//   * When the element itself is not what you are testing, the *_if
+//     variant is the one you want: rg::count compares elements, so
+//     counting by department is rg::count_if.
 //
 // TODO(2a)  names_sorted_by_score_desc(recs) -> std::vector<std::string>
 //   Names, highest score first.
-//   * rg::sort(v, std::greater<>{}, &Rec::score) — note the projection
-//     slot is third, so the comparator must be spelled explicitly.
+//   * rg::sort(v, cmp) with
+//       [](Rec const& a, Rec const& b) { return a.score > b.score; }
+//     Note that descending is expressed in the comparator, not by a
+//     std::greater<> wrapper around some extracted key.
 //   * Take recs BY VALUE: sort mutates, the caller's copy must not move.
-//   * Then project to names with rv::transform(&Rec::name) + to_vector.
+//   * Then map to names with
+//       rv::transform([](Rec const& r) { return r.name; })
+//     + to_vector.
 //
 // TODO(2b)  top_scorer(recs) -> std::string
-//   * rg::max_element(recs, {}, &Rec::score) returns an ITERATOR. Deref.
+//   * rg::max_element(recs, cmp) returns an ITERATOR. Deref, then .name.
+//   * cmp is still the LESS-than form even though you want the maximum:
+//     a.score < b.score.
 //
 // TODO(2c)  count_in_dept(recs, dept) -> std::ptrdiff_t
-//   * rg::count(range, value, projection) — no predicate needed.
+//   * rg::count would compare whole Recs against a value, which is not
+//     what you have. Use rg::count_if with a predicate reading .dept.
+//   * `r.dept == dept` compiles: std::string compares against
+//     std::string_view directly.
 //
 // TODO(2d)  first_below(recs, threshold) -> std::optional<std::string>
 //   First record (original order) scoring strictly below threshold.
-//   * rg::find_if(recs, pred, &Rec::score); the predicate then takes an
-//     int, not a Rec.
+//   * rg::find_if(recs, pred); the predicate takes a Rec const& and
+//     tests r.score < threshold, so threshold must be captured.
 //   * Compare the result against rg::end(recs) before dereferencing;
 //     return std::nullopt when not found.
 //
 // TODO(2e)  all_at_least(recs, threshold) -> bool
-//   * rg::all_of with a projection.
+//   * rg::all_of with the obvious predicate. Vacuously true when empty.
 //
 // TODO(2f)  partition_passing(recs, threshold) -> std::pair<std::vector<Rec>, std::ptrdiff_t>
 //   Reorder so records scoring >= threshold come first, RELATIVE ORDER
@@ -368,12 +388,14 @@ auto grid(std::vector<int> const& /*xs*/, std::vector<char> const& /*ys*/) {
 //   ascending department order:
 //       "dept: <integer average> (<count>)"
 //   joined by '\n', with NO trailing newline.
-//   * Filter, materialise, then rg::sort with projection &Rec::dept —
-//     chunk_by only groups ADJACENT equals, so sorting first is what
-//     turns it into a group-by.
+//   * Filter, materialise, then rg::sort with a comparator on the whole
+//     record — [](Rec const& a, Rec const& b) { return a.dept < b.dept; }
+//     — because chunk_by only groups ADJACENT equals, so sorting first is
+//     what turns it into a group-by.
 //   * Group: rv::chunk_by comparing the dept of neighbours.
 //   * Per group: count with rg::distance; total with
-//     rg::fold_left(grp | rv::transform(&Rec::score), 0, std::plus<>{}).
+//     rg::fold_left(grp | rv::transform([](Rec const& r) { return r.score; }),
+//                   0, std::plus<>{}).
 //     Integer division truncates — the expected values assume that.
 //   * Assemble the lines, then rv::join_with('\n') to stitch them. That
 //     yields a range of CHARS, so materialise into a std::string (a plain
@@ -452,12 +474,13 @@ int main() {
         auto [ordered, passed] = partition_passing(recs, 70);
         assert(passed == 3);
         // relative order kept in BOTH groups — catches rg::partition
-        assert((to_vector(ordered | rv::transform(&Rec::name))
+        assert((to_vector(ordered
+                          | rv::transform([](Rec const& r) { return r.name; }))
                 == std::vector<std::string>{"ann", "bob", "dee", "cid", "eve"}));
-        std::cout << "step 2  algorithms + projections ok\n";
+        std::cout << "step 2  algorithms + comparators ok\n";
     }
 #else
-    std::cout << "step 2  algorithms + projections TODO (flip STEP2_READY)\n";
+    std::cout << "step 2  algorithms + comparators TODO (flip STEP2_READY)\n";
 #endif
 
     // ---- step 3 ----------------------------------------------------------
