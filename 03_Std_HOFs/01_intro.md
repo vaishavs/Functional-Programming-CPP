@@ -481,9 +481,9 @@ take_view
         → ref_view
             → vector
 ```
-This is a nested type — a compile-time description of the computation. No elements are touched. 
+This is a nested type — a compile-time description of the computation.
 
-The diagram now looks like this:
+This time, the results are stored instead of being comsumed directly, so the diagram now looks like this:
 ```
    ── At the assignment, NOTHING runs. ──────────────────────────────
    The pipeline itself is a lightweight object holding: a pointer to
