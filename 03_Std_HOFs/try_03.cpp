@@ -25,10 +25,6 @@
 // Conventions used by every test
 //   * Nothing prints. Results are returned and compared with ==.
 //   * Views are lazy; a test that compares values has always materialised.
-//   * NO PROJECTIONS. No algorithm here uses the trailing projection
-//     parameter, and no callable is a pointer-to-member. Every comparator,
-//     predicate and transform is a lambda taking a whole element, and the
-//     *_if algorithm variants do the work a projection would have done.
 // ===========================================================================
 
 #include <algorithm>
