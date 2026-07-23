@@ -88,25 +88,25 @@ int main() {
     std::vector<int> input1 = {1, 2, 3, 4};
     std::vector<int> expected1 = {2, 4, 6, 8};
     assert(double_values(input1) == expected1);
-    std::cout << "[✓] Exercise 1 (std::transform & back_inserter) Passed!\n";
+    std::cout << "Exercise 1 (std::transform & back_inserter) Passed!\n";
 
     // Test 2
     std::vector<int> input2 = {5, -2, 9, -8, -7, 1};
     std::vector<int> expected2 = {5, 9, 1};
     remove_negatives(input2);
     assert(input2 == expected2);
-    std::cout << "[✓] Exercise 2 (Erase-Remove Idiom) Passed!\n";
+    std::cout << "Exercise 2 (Erase-Remove Idiom) Passed!\n";
 
     // Test 3
     std::vector<int> input3 = {2, 3, 4}; 
     assert(calculate_product(input3) == 24);
-    std::cout << "[✓] Exercise 3 (std::accumulate) Passed!\n";
+    std::cout << "Exercise 3 (std::accumulate) Passed!\n";
 
     // Test 4
     std::string input4 = "srotpada & smhtirogla";
     assert(reverse_string(input4) == "algorithms & adaptors");
-    std::cout << "[✓] Exercise 4 (std::stack) Passed!\n";
+    std::cout << "Exercise 4 (std::stack) Passed!\n";
 
-    std::cout << "\n🎉 All exercises completed successfully!\n";
+    std::cout << "\nAll exercises completed successfully!\n";
     return 0;
 }
