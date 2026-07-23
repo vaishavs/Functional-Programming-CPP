@@ -262,3 +262,8 @@ int main() {
 }
 
 ```
+
+Sources:
+* https://youtu.be/YWayW5ePpkY?si=xn2wRmXAaKLKifuu
+* https://youtu.be/g-F280_AQp8?si=lBVwVT4XYy9ptB3b
+* https://hannes.hauswedell.net/post/2018/04/11/view1/
