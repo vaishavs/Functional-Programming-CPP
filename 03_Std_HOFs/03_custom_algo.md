@@ -155,6 +155,6 @@ int main() {
 
 Sources:
 
-* https://www.studyplan.dev/pro-cpp/implementing-iterators-ranges
+* https://www.oreilly.com/library/view/c-cookbook/0596007612/ch07s11.html
 * https://stackoverflow.com/questions/11993575/how-can-i-write-a-custom-algorithm-that-works-on-either-a-vector-or-map-iterator
 
