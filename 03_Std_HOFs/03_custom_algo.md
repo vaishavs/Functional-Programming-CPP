@@ -156,5 +156,5 @@ int main() {
 Sources:
 
 * https://www.studyplan.dev/pro-cpp/implementing-iterators-ranges
-* https://www.reedbeta.com/blog/ranges-compatible-containers/
+* https://stackoverflow.com/questions/11993575/how-can-i-write-a-custom-algorithm-that-works-on-either-a-vector-or-map-iterator
 
